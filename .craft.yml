@@ -1,0 +1,8 @@
+minVersion: 0.34.1
+github:
+  owner: getsentry
+  repo: topicctl-parser
+changelogPolicy: auto
+targets:
+  - name: sentry-pypi
+    internalPypiRepo: getsentry/pypi
