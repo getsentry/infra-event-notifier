@@ -1,89 +1,40 @@
-import os
+from typing import Mapping
 
-from typing import Dict
-
-from backends.datadog import report_event_to_datadog
-
-SENTRY_REGION = os.getenv("SENTRY_REGION", "unknown")
-
-
-def notify_datadog(
-    title: str,
-    text: str,
-    tags: Dict[str, str],
-) -> None:
-    """
-    Sends an event to datadog.
-    Useful if you want to send different payloads to different backends, otherwise use notify().
-
-    :param title: Title of DD event
-    :param text: Body of event
-    :param tags: dict storing event tags
-    """
-    report_event_to_datadog(title, text, tags)
-
-
-def notify_slack(
-    title: str,
-    text: str,
-) -> None:
-    """
-    Sends a notification to slack.
-    Useful if you want to send different payloads to different backends, otherwise use notify().
-
-    :param title: Title of slack alert
-    :param text: Body of alert
-    """
-    # TODO: implement
-    pass
-
-
-def notify_jira(
-    title: str,
-    text: str,
-    tags: Dict[str, str],
-) -> None:
-    """
-    Create an issue in Jira.
-    Useful if you want to send different payloads to different backends, otherwise use notify().
-
-    :param title: Title of issue
-    :param text: Body of issue
-    :param tags: dict storing issue tags
-    """
-    # TODO: implement
-    pass
+from backends.datadog import notify_datadog
+from backends.jira import notify_jira
+from backends.slack import notify_slack
 
 
 def notify(
     title: str,
     text: str,
-    tags: Dict[str, str],
+    tags: Mapping[str, str],
+    datadog_api_key: str,
+    slack_api_key: str,
+    jira_api_key: str,
     datadog_event: bool = True,
     slack_notification: bool = True,
     jira_ticket: bool = True,
 ) -> None:
     """
     Notifies various backends of a given event.
+    The same text bodies and titles will be used for each backend.
+    To send different text bodies to different backends, use the `notify_{backend}()`
+    function within each backend.
 
     :param title: Title of slack alert/DD event
     :param text: Body of alert/event
     :param tags: dict storing event tags (datadog/jira)
+    :param datadog_api_key: DD API key for sending events
+    :param slack_api_key: Slack API key for sending notifications
+    :param jira_api_key: Jira API key for creating issues
     :param datadog_event: Sends a datadog event using the given title/text
     :param slack_notification: Sends a slack notification using the given title/text
     :param jira_ticket: Creates a jira ticket using the given title/text
     """
     if datadog_event:
-        report_event_to_datadog(title, text, tags)
-        # report_event_to_datadog(
-        #     title="test-title",
-        #     text="test body",
-        #     tags={"foo": "bar"},
-        #     alert_type="warning",
-        # )
+        notify_datadog(title, text, tags, datadog_api_key)
     if slack_notification:
-        # TODO: implement
-        pass
+        notify_slack(title, text, slack_api_key)
     if jira_ticket:
-        # TODO: implement
-        pass
+        notify_jira(title, text, tags, jira_api_key)
