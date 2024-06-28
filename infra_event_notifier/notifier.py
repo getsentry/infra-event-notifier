@@ -15,6 +15,10 @@ def notify_datadog(
     """
     Sends an event to datadog.
     Useful if you want to send different payloads to different backends, otherwise use notify().
+
+    :param title: Title of DD event
+    :param text: Body of event
+    :param tags: dict storing event tags
     """
     report_event_to_datadog(title, text, tags)
 
@@ -26,6 +30,9 @@ def notify_slack(
     """
     Sends a notification to slack.
     Useful if you want to send different payloads to different backends, otherwise use notify().
+
+    :param title: Title of slack alert
+    :param text: Body of alert
     """
     # TODO: implement
     pass
@@ -39,6 +46,10 @@ def notify_jira(
     """
     Create an issue in Jira.
     Useful if you want to send different payloads to different backends, otherwise use notify().
+
+    :param title: Title of issue
+    :param text: Body of issue
+    :param tags: dict storing issue tags
     """
     # TODO: implement
     pass
