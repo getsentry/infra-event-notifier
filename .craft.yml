@@ -1,8 +1,9 @@
 minVersion: 0.0.1
 github:
   owner: getsentry
-  repo: topicctl-parser
+  repo: infra-event-notifier
 changelogPolicy: auto
 targets:
+  - name: pypi
   - name: sentry-pypi
     internalPypiRepo: getsentry/pypi

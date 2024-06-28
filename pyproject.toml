@@ -3,15 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "topicctl_parser"
+name = "infra_event_notifier"
 version = "0.0.1"
-description = "Parses topicctl output and sends notifications"
-authors = [
-  { name = "Ben McKerry", email = "ben.mckerry@sentry.io" },
-]
+description = "Package to send notifications to various backends (datadog/slack/jira)"
 readme = "README.md"
 requires-python = ">=3.8"
 
 [project.urls]
-Homepage = "https://github.com/getsentry/topicctl-parser"
-Issues = "https://github.com/getsentry/topicctl-parser/issues"
+Homepage = "https://github.com/getsentry/infra-event-notifier"
+Issues = "https://github.com/getsentry/infra-event-notifier/issues"
