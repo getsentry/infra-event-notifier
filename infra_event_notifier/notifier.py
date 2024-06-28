@@ -7,13 +7,50 @@ from backends.datadog import report_event_to_datadog
 SENTRY_REGION = os.getenv("SENTRY_REGION", "unknown")
 
 
+def notify_datadog(
+    title: str,
+    text: str,
+    tags: Dict[str, str],
+) -> None:
+    """
+    Sends an event to datadog.
+    Useful if you want to send different payloads to different backends, otherwise use notify().
+    """
+    report_event_to_datadog(title, text, tags)
+
+
+def notify_slack(
+    title: str,
+    text: str,
+) -> None:
+    """
+    Sends a notification to slack.
+    Useful if you want to send different payloads to different backends, otherwise use notify().
+    """
+    # TODO: implement
+    pass
+
+
+def notify_jira(
+    title: str,
+    text: str,
+    tags: Dict[str, str],
+) -> None:
+    """
+    Create an issue in Jira.
+    Useful if you want to send different payloads to different backends, otherwise use notify().
+    """
+    # TODO: implement
+    pass
+
+
 def notify(
     title: str,
     text: str,
     tags: Dict[str, str],
-    datadog_event: bool = False,
-    slack_notification: bool = False,
-    jira_ticket: bool = False,
+    datadog_event: bool = True,
+    slack_notification: bool = True,
+    jira_ticket: bool = True,
 ) -> None:
     """
     Notifies various backends of a given event.
@@ -39,7 +76,3 @@ def notify(
     if jira_ticket:
         # TODO: implement
         pass
-
-
-if __name__ == "__main__":
-    notify()

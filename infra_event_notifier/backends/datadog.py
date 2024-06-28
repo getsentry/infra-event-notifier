@@ -1,9 +1,10 @@
 import time
-from urllib.request import Request, urlopen
 import os
 import json
 
-from typing import Any, Dict
+from urllib.request import Request, urlopen
+from typing import Any, Dict, Mapping
+from http.client import HTTPResponse
 
 
 DD_API_BASE = "https://api.datadoghq.com"
@@ -12,7 +13,7 @@ DATADOG_API_KEY = os.getenv("DATADOG_API_KEY") or os.getenv("DD_API_KEY")
 assert DATADOG_API_KEY, "Please set either DATADOG_API_KEY or DD_API_KEY env var."
 
 
-def send_event_payload_to_datadog(payload: Dict[str, Any]) -> str:
+def send_event_payload_to_datadog(payload: Dict[str, Any]) -> HTTPResponse:
     # API docs: https://docs.datadoghq.com/api/latest/events/#post-an-event
     jsonData = json.dumps(payload)
     data = jsonData.encode("utf-8")
@@ -20,12 +21,13 @@ def send_event_payload_to_datadog(payload: Dict[str, Any]) -> str:
     req.add_header("DD-API-KEY", DATADOG_API_KEY)
     req.add_header("Content-Type", "application/json; charset=utf-8")
     with urlopen(req) as response:
-        response.read().decode("utf-8")
+        res = json.loads(response.read().decode("utf-8"))
+        return res
 
 
 def report_event_to_datadog(
     title: str, text: str, tags: Dict[str, Any], alert_type: str = "user_update"
-) -> None:
+) -> Mapping[str, str]:
     payload = {
         "title": title,
         "text": text,
@@ -34,3 +36,7 @@ def report_event_to_datadog(
         "alert_type": alert_type,
     }
     return send_event_payload_to_datadog(payload)
+
+
+if __name__ == "__main__":
+    report_event_to_datadog(title="test_from_main", text="text", tags={})
