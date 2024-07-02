@@ -3,11 +3,10 @@ import json
 
 import urllib.request
 
-# from urllib.request import Request, urlopen
 from typing import Mapping
 
 
-def notify_datadog(
+def send_event(
     title: str,
     text: str,
     tags: Mapping[str, str],
@@ -34,8 +33,8 @@ def notify_datadog(
         "date_happened": epoch,
         "alert_type": alert_type,
     }
-    jsonData = json.dumps(payload)
-    data = jsonData.encode("utf-8")
+    json_data = json.dumps(payload)
+    data = json_data.encode("utf-8")
     req = urllib.request.Request("https://api.datadoghq.com/api/v1/events", data=data)
     req.add_header("DD-API-KEY", datadog_api_key)
     req.add_header("Content-Type", "application/json; charset=utf-8")

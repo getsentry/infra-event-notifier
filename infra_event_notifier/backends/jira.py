@@ -1,7 +1,7 @@
 from typing import Mapping
 
 
-def notify_jira(
+def create_issue(
     title: str,
     text: str,
     tags: Mapping[str, str],

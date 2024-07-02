@@ -1,8 +1,8 @@
 from typing import Mapping
 
-from backends.datadog import notify_datadog
-from backends.jira import notify_jira
-from backends.slack import notify_slack
+from backends.datadog import send_event
+from backends.jira import create_issue
+from backends.slack import send_notification
 
 
 def notify(
@@ -12,9 +12,9 @@ def notify(
     datadog_api_key: str,
     slack_api_key: str,
     jira_api_key: str,
-    datadog_event: bool = True,
-    slack_notification: bool = True,
-    jira_ticket: bool = True,
+    datadog_event: bool = False,
+    slack_notification: bool = False,
+    jira_ticket: bool = False,
 ) -> None:
     """
     Notifies various backends of a given event.
@@ -33,8 +33,8 @@ def notify(
     :param jira_ticket: Creates a jira ticket using the given title/text
     """
     if datadog_event:
-        notify_datadog(title, text, tags, datadog_api_key)
+        send_event(title, text, tags, datadog_api_key)
     if slack_notification:
-        notify_slack(title, text, slack_api_key)
+        send_notification(title, text, slack_api_key)
     if jira_ticket:
-        notify_jira(title, text, tags, jira_api_key)
+        create_issue(title, text, tags, jira_api_key)

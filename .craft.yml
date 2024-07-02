@@ -4,6 +4,7 @@ github:
   repo: infra-event-notifier
 changelogPolicy: auto
 targets:
+  - name: github
   - name: pypi
   - name: sentry-pypi
     internalPypiRepo: getsentry/pypi

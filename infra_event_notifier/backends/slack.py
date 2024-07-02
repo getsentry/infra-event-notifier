@@ -1,4 +1,4 @@
-def notify_slack(
+def send_notification(
     title: str,
     text: str,
     slack_api_key: str,
