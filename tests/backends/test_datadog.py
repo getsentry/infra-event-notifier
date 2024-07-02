@@ -1,7 +1,7 @@
 import json
 import time
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from infra_event_notifier.backends.datadog import send_event
 
@@ -10,14 +10,14 @@ class TestDatadog:
     @patch("urllib.request.urlopen")
     @patch("urllib.request.Request")
     @patch("json.loads")
+    @patch("time.time", MagicMock(return_value=12345))
     def test_send_event_request(self, mock_urlopen, mock_request, mock_loads):
-        epoch = int(time.time())
         payload = json.dumps(
             {
                 "title": "test",
                 "text": "test",
                 "tags": [],
-                "date_happened": epoch,
+                "date_happened": 12345,
                 "alert_type": "user_update",
             }
         ).encode("utf-8")
