@@ -5,36 +5,51 @@ from backends.jira import create_issue
 from backends.slack import send_notification
 
 
-def notify(
-    title: str,
-    text: str,
-    tags: Mapping[str, str],
-    datadog_api_key: str,
-    slack_api_key: str,
-    jira_api_key: str,
-    datadog_event: bool = False,
-    slack_notification: bool = False,
-    jira_ticket: bool = False,
-) -> None:
-    """
-    Notifies various backends of a given event.
-    The same text bodies and titles will be used for each backend.
-    To send different text bodies to different backends, use the `notify_{backend}()`
-    function within each backend.
+class Notifier:
+    def __init__(
+        self,
+        datadog_api_key: str = None,
+        slack_api_key: str = None,
+        jira_api_key: str = None,
+    ) -> None:
+        self.datadog_api_key = datadog_api_key
+        self.slack_api_key = slack_api_key
+        self.jira_api_key = jira_api_key
 
-    :param title: Title of slack alert/DD event
-    :param text: Body of alert/event
-    :param tags: dict storing event tags (datadog/jira)
-    :param datadog_api_key: DD API key for sending events
-    :param slack_api_key: Slack API key for sending notifications
-    :param jira_api_key: Jira API key for creating issues
-    :param datadog_event: Sends a datadog event using the given title/text
-    :param slack_notification: Sends a slack notification using the given title/text
-    :param jira_ticket: Creates a jira ticket using the given title/text
-    """
-    if datadog_event:
-        send_event(title, text, tags, datadog_api_key)
-    if slack_notification:
-        send_notification(title, text, slack_api_key)
-    if jira_ticket:
-        create_issue(title, text, tags, jira_api_key)
+    def send_datadog_event(
+        self,
+        title: str,
+        text: str,
+        tags: Mapping[str, str],
+        alert_type: str,
+    ):
+        """
+        Sends an event to Datadog.
+
+        :param title: Title of DD event
+        :param text: Body of event
+        :param tags: dict storing event tags
+        :param alert_type: Type of event if using an event monitor, see https://docs.datadoghq.com/api/latest/events/
+        """
+        if not self.datadog_api_key:
+            raise ValueError("datadog_api_key must be set to send events")
+        api_key = self.datadog_api_key
+        send_event(
+            title=title,
+            text=text,
+            tags=tags,
+            datadog_api_key=api_key,
+            alert_type=alert_type,
+        )
+
+    def send_slack_notification(self, title, text):
+        if not self.slack_api_key:
+            raise ValueError("slack_api_key must be set to send notifications")
+        # TODO: implement
+        send_notification(title=title, text=text, slack_api_key=self.slack_api_key)
+
+    def create_jira_issue(self, title, text, tags):
+        if not self.jira_api_key:
+            raise ValueError("jira_api_key must be set to create issues")
+        # TODO: implement
+        create_issue(title=title, text=text, tags=tags, jira_api_key=self.jira_api_key)
