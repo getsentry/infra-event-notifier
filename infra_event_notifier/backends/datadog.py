@@ -11,8 +11,8 @@ def send_event(
     text: str,
     tags: Mapping[str, str],
     datadog_api_key: str,
-    alert_type: str = "user_update",
-) -> Mapping[str, str]:
+    alert_type: str,
+) -> None:
     """
     Sends an event to Datadog.
 
@@ -36,5 +36,4 @@ def send_event(
     req.add_header("DD-API-KEY", datadog_api_key)
     req.add_header("Content-Type", "application/json; charset=utf-8")
     with urllib.request.urlopen(req) as response:
-        res = json.loads(response.read().decode("utf-8"))
-        return res
+        json.loads(response.read().decode("utf-8"))
