@@ -2,7 +2,7 @@ VENV_PATH = .venv
 
 .PHONY: venv
 venv:
-	virtualenv -ppython3 $(VENV_PATH)
+	python -m venv $(VENV_PATH)
 	pip install -e .
 
 .PHONY: setup-git
