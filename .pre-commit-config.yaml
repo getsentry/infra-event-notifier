@@ -25,14 +25,15 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
-        language_version: python3.8
+        language_version: python3.11
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.6.1'
     hooks:
     -   id: mypy
-        args: [--config-file, py/mypy.ini, --strict]
+        args: [--strict]
         additional_dependencies: [
           pytest==7.1.2,
         ]
+        files: ^infra_event_notifier/.+
 default_language_version:
-  python: python3.8
+  python: python3.11

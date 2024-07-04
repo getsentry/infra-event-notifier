@@ -24,11 +24,11 @@ update-deps: venv
 
 .PHONY: typecheck
 typecheck:
-	pip install -r requirements-dev.txt -e . 
+	pip install -r requirements-dev.txt -e .
 	mypy infra_event_notifier
 
 
 .PHONY: test
 test:
-	pip install -r requirements-dev.txt -e . 
+	pip install -r requirements-dev.txt -e .
 	pytest -vv ./tests

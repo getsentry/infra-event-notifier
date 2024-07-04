@@ -1,10 +1,8 @@
-import time
 import json
-
+import time
 import urllib.request
-from urllib.error import HTTPError
-
 from typing import Mapping
+from urllib.error import HTTPError
 
 
 def send_event(
@@ -21,7 +19,8 @@ def send_event(
     :param text: Body of event
     :param tags: dict storing event tags
     :param datadog_api_key: DD API key for sending events
-    :param alert_type: Type of event if using an event monitor, see https://docs.datadoghq.com/api/latest/events/
+    :param alert_type: Type of event if using an event monitor,
+        see https://docs.datadoghq.com/api/latest/events/
     """
     # API docs: https://docs.datadoghq.com/api/latest/events/#post-an-event
     payload = {
@@ -33,12 +32,15 @@ def send_event(
     }
     json_data = json.dumps(payload)
     data = json_data.encode("utf-8")
-    req = urllib.request.Request("https://api.datadoghq.com/api/v1/events", data=data)
+    req = urllib.request.Request(
+        "https://api.datadoghq.com/api/v1/events", data=data
+    )
     req.add_header("DD-API-KEY", datadog_api_key)
     req.add_header("Content-Type", "application/json; charset=utf-8")
     with urllib.request.urlopen(req) as response:
         status = response.status
-        # XXX(ben): docs say events API returns 200, in practice I was getting 202s
+        # XXX(ben): docs say events API returns 200,
+        # in practice I was getting 202s
         if status > 202:
             raise HTTPError(
                 url=response.url,

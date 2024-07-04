@@ -17,12 +17,8 @@ class Notifier:
         self.jira_api_key = jira_api_key
 
     def notify(
-        self,
-        title: str,
-        text: str,
-        tags: Mapping[str, str],
-        alert_type: str,
-    ):
+        self, title: str, text: str, tags: Mapping[str, str], alert_type: str
+    ) -> None:
         # send DD event
         if self.datadog_api_key:
             send_event(
@@ -36,11 +32,16 @@ class Notifier:
         # send slack notification
         if self.slack_api_key:
             # TODO: implement
-            send_notification(title=title, text=text, slack_api_key=self.slack_api_key)
+            send_notification(
+                title=title, text=text, slack_api_key=self.slack_api_key
+            )
 
         # create jira issue
         if self.jira_api_key:
             # TODO: implement
             create_issue(
-                title=title, text=text, tags=tags, jira_api_key=self.jira_api_key
+                title=title,
+                text=text,
+                tags=tags,
+                jira_api_key=self.jira_api_key,
             )
