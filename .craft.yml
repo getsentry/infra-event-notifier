@@ -3,8 +3,9 @@ github:
   owner: getsentry
   repo: infra-event-notifier
 changelogPolicy: auto
+preReleaseCommand: bash ./scripts/bump-version.sh
+releaseBranchPrefix: release
 targets:
-  - name: github
   - name: pypi
   - name: sentry-pypi
     internalPypiRepo: getsentry/pypi
