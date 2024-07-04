@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infra_event_notifier"
+version = "0.0.1"
+description = "Package to send notifications to various backends (datadog/slack/jira)"
+readme = "README.md"
+requires-python = ">=311"
+
+[project.urls]
+Homepage = "https://github.com/getsentry/infra-event-notifier"
+Issues = "https://github.com/getsentry/infra-event-notifier/issues"

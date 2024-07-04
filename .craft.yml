@@ -1,0 +1,10 @@
+minVersion: 0.0.1
+github:
+  owner: getsentry
+  repo: infra-event-notifier
+changelogPolicy: auto
+targets:
+  - name: github
+  - name: pypi
+  - name: sentry-pypi
+    internalPypiRepo: getsentry/pypi
