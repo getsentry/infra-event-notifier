@@ -1,8 +1,8 @@
 from typing import Mapping
 
-from backends.datadog import send_event
-from backends.jira import create_issue
-from backends.slack import send_notification
+from infra_event_notifier.backends.datadog import send_event
+from infra_event_notifier.backends.jira import create_issue
+from infra_event_notifier.backends.slack import send_notification
 
 
 class Notifier:
