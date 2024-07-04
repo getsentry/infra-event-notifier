@@ -7,13 +7,21 @@ from urllib.error import HTTPError
 from infra_event_notifier.backends.datadog import send_event
 
 
+def mock_context_manager() -> MagicMock:
+    # mocking context managers is hard
+    cm = MagicMock()
+    cm.status = 200
+    cm.__enter__.return_value = cm
+    return cm
+
+
 class TestDatadog:
-    @patch("urllib.request.urlopen")
-    @patch("urllib.request.Request")
-    @patch("json.loads")
+    @patch("infra_event_notifier.backends.datadog.urllib.request.urlopen")
     @patch("time.time", MagicMock(return_value=12345))
-    def test_send_event_request(self, mock_urlopen, mock_request, mock_loads):
-        payload = json.dumps(
+    def test_send_event_request(self, mock_urlopen):
+        mock_urlopen.return_value = mock_context_manager()
+
+        data = json.dumps(
             {
                 "title": "test",
                 "text": "test",
@@ -22,6 +30,10 @@ class TestDatadog:
                 "alert_type": "user_update",
             }
         ).encode("utf-8")
+        headers = {
+            "Dd-api-key": "fakeapikey",
+            "Content-type": "application/json; charset=utf-8",
+        }
         send_event(
             title="test",
             text="test",
@@ -29,15 +41,14 @@ class TestDatadog:
             datadog_api_key="fakeapikey",
             alert_type="user_update",
         )
-        mock_request.assert_called_once_with(
-            "https://api.datadoghq.com/api/v1/events",
-            data=payload,
-        )
+        req = mock_urlopen.call_args.args[0]
+        assert req._full_url == "https://api.datadoghq.com/api/v1/events"
+        assert req._data == data
+        assert req.headers == headers
 
-    @patch("urllib.request.urlopen")
-    @patch("urllib.request.Request")
-    @patch("json.loads")
-    def test_bad_request(self, mock_urlopen, mock_request, mock_loads):
+    @patch("infra_event_notifier.backends.datadog.urllib.request.urlopen")
+    def test_bad_request(self, mock_urlopen):
+        mock_urlopen.return_value = mock_context_manager()
         mock_urlopen.side_effect = HTTPError(
             "https://app.datadoghq.com/event/",
             code=400,

@@ -2,6 +2,7 @@ import time
 import json
 
 import urllib.request
+from urllib.error import HTTPError
 
 from typing import Mapping
 
@@ -36,4 +37,13 @@ def send_event(
     req.add_header("DD-API-KEY", datadog_api_key)
     req.add_header("Content-Type", "application/json; charset=utf-8")
     with urllib.request.urlopen(req) as response:
-        json.loads(response.read().decode("utf-8"))
+        status = response.status
+        # XXX(ben): docs say events API returns 200, in practice I was getting 202s
+        if status > 202:
+            raise HTTPError(
+                url=response.url,
+                code=status,
+                msg=f"Recieved {status} response from Datadog",
+                hdrs=response.headers,
+                fp=None,
+            )
