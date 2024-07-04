@@ -12,3 +12,12 @@ requires-python = ">= 3.8"
 [project.urls]
 Homepage = "https://github.com/getsentry/infra-event-notifier"
 Issues = "https://github.com/getsentry/infra-event-notifier/issues"
+
+[tool.black]
+line-length = 79
+target-version = ['py38']
+skip-magic-trailing-comma = true
+
+[tool.isort]
+profile = "black"
+line_length = 79
