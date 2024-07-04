@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "infra_event_notifier"
-version = "0.0.1"
+name = "sentry_infra_event_notifier"
+version = "0.0.2"
 description = "Package to send notifications to various backends (datadog/slack/jira)"
 readme = "README.md"
 requires-python = ">= 3.8"
