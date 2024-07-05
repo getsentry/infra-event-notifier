@@ -1,0 +1,64 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+      - release/**
+  pull_request:
+
+jobs:
+  linting:
+    name: "Run linters"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout code
+      - uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.11
+            3.12
+      - name: Install dependencies
+        run: |
+          make venv
+          pip install -r requirements-dev.txt -e .
+
+      - name: Run linter
+        run: |
+          black infra_event_notifier tests
+          flake8 infra_event_notifier tests
+  typing:
+    name: "Type checking"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout code
+      - uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.11
+            3.12
+      - name: Run mypy
+        run: |
+          make venv
+          make typecheck
+
+  tests:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout code
+      - uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.11
+            3.12
+      - name: Run tests
+        run: |
+          make venv
+          make test

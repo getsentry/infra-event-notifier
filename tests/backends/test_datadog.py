@@ -1,8 +1,8 @@
 import json
-import pytest
-
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
+
+import pytest
 
 from infra_event_notifier.backends.datadog import send_event
 
@@ -18,7 +18,7 @@ def mock_context_manager() -> MagicMock:
 class TestDatadog:
     @patch("infra_event_notifier.backends.datadog.urllib.request.urlopen")
     @patch("time.time", MagicMock(return_value=12345))
-    def test_send_event_request(self, mock_urlopen):
+    def test_send_event_request(self, mock_urlopen) -> None:
         mock_urlopen.return_value = mock_context_manager()
 
         data = json.dumps(
@@ -47,7 +47,7 @@ class TestDatadog:
         assert req.headers == headers
 
     @patch("infra_event_notifier.backends.datadog.urllib.request.urlopen")
-    def test_bad_request(self, mock_urlopen):
+    def test_bad_request(self, mock_urlopen) -> None:
         mock_urlopen.return_value = mock_context_manager()
         mock_urlopen.side_effect = HTTPError(
             "https://app.datadoghq.com/event/",
