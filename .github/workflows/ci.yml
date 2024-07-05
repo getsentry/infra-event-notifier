@@ -12,11 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout code
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: |
+            3.11
+            3.12
       - name: Install dependencies
         run: |
           make venv
@@ -31,11 +33,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout code
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: |
+            3.11
+            3.12
       - name: Run mypy
         run: |
           make venv
@@ -47,11 +51,13 @@ jobs:
     strategy:
       max-parallel: 3
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout code
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: |
+            3.11
+            3.12
       - name: Run tests
         run: |
           make venv
