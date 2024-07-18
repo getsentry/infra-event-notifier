@@ -62,7 +62,8 @@ def create_or_update_issue(
             as the `text` parameter. Defaults to None.
         jira_api_key (str): Jira API key
     """
-
+    print(title)
+    return 
     if key := _find_jira_issue(jira, title, tags, jira_api_key):
         if update_text_body:
             _update_jira_issue(jira, tags, text, key, jira_api_key)

@@ -6,17 +6,34 @@ from infra_event_notifier.backends.jira import (
     JiraConfig,
 )
 from infra_event_notifier.backends.slack import send_notification
-
+#
 
 class Notifier:
-    def __init__(self) -> None:
+    def __init__(self, 
+                datadog_api_key:str = None, 
+                slack_api_key:str = None, 
+                jira_api_key:str = None, 
+                jira_url: str = None,
+                jira_project: str = None,
+                jira_user_email: str = None) -> None:
         # datadog fields
-        self.datadog_api_key = None
+        self.datadog_api_key = datadog_api_key
         # slack fields
-        self.slack_api_key = None
+        self.slack_api_key = slack_api_key
         # jira fields
-        self.jira_api_key = None
-        self.jira_config = None
+        self.jira_api_key = jira_api_key
+        if jira_api_key:
+            self.jira_config = JiraConfig(
+                url=jira_url,
+                user_email=jira_user_email,
+                project_key=jira_project,
+            )
+        else:
+            self.jira_config = None
+
+        self.use_slack = False
+        self.use_datadog = False
+        self.use_jira = False
 
         # Notification fields
         self.title = None
@@ -26,48 +43,37 @@ class Notifier:
         self.fallback_comment_text = None
         self.update_text_body = None
 
-    def with_datadog(self, datadog_api_key: str) -> Self:
+    def slack(self, use_slack:bool = False) -> Self:
         """
-        Specify that the event is for Datadog.
-
+        Tell the notifier to notify to Slack. 
+        Requires a Slack API Key
+        
         Args:
-            datadog_api_key (str): Datadog API Key
+            use_slack (bool): True/False
         """
-        self.datadog_api_key = datadog_api_key
+        self.use_slack = use_slack
         return self
 
-    def with_jira(
-        self,
-        jira_url: str,
-        jira_project: str,
-        jira_user_email: str,
-        jira_api_key: str,
-    ) -> Self:
+    def datadog(self, use_datadog:bool = False) -> Self:
         """
-        Specify that the event is for Jira.
-
+        Tell the notifier to notify to Datadog. 
+        Requires a Datadog API Key
+        
         Args:
-            jira_url (str): Jira URL
-            jira_project (str): Jira Project string
-            jira_user_email (str): Jira user email
-            jira_api_key (str): Jira API Key
+            use_datadog (bool): True/False
         """
-        self.jira_api_key = jira_api_key
-        self.jira_config = JiraConfig(
-            url=jira_url,
-            user_email=jira_user_email,
-            project_key=jira_project,
-        )
+        self.use_datadog = use_datadog
         return self
 
-    def with_slack(self, slack_api_key: str) -> Self:
+    def jira(self, use_jira:bool = False) -> Self:
         """
-        Specify that the event is for Slack.
-
+        Tell the notifier to notify to Jira. 
+        Requires a Jira API Key
+        
         Args:
-            slack_api_key (str): Slack API Key
+            use_jira (bool): True/False
         """
-        self.slack_api_key = slack_api_key
+        self.use_jira = use_jira
         return self
     
     def set_title(self, title: str) -> Self:
@@ -135,7 +141,7 @@ class Notifier:
         self.update_text_body = update_text_body
         return self
 
-    def send(self)->bool:
+    def send(self):
         """
         Sends notifications to whatever backends were configured via with_{backend}()
         For more details on each backend see their respective file
@@ -143,30 +149,28 @@ class Notifier:
         Returns True if the event was successfully sent, False otherwise
         """
         # send DD event
-        if self.datadog_api_key:
-            if self.title != None and self.text != None:
-                return send_event(
+        if self.use_datadog:
+            if self.datadog_api_key and self.title and self.text:
+                send_event(
                     title=self.title,
                     text=self.text,
                     tags=self.tags,
                     datadog_api_key=self.datadog_api_key,
                     alert_type=self.alert_type,
                 )
-            return False
 
         # send slack notification
-        if self.slack_api_key:
+        if self.use_slack:
             # TODO: implement
-            if self.title != None and self.text != None:
-                return send_notification(
+            if self.slack_api_key and self.title and self.text:
+                send_notification(
                     title=self.title, text=self.text, slack_api_key=self.slack_api_key
                 )
-            return False
 
         # create jira issue
-        if self.jira_api_key and self.jira_config:
-            if self.title != None and self.text != None:
-                return create_or_update_issue(
+        if self.use_jira:
+            if self.jira_api_key and self.jira_config and self.title and self.text:
+                create_or_update_issue(
                     jira=self.jira_config,
                     title=self.title,
                     text=self.text,
@@ -175,9 +179,6 @@ class Notifier:
                     update_text_body=self.update_text_body,
                     jira_api_key=self.jira_api_key,
                 )
-            return False
-
-        return False
 
 
     def notify(
@@ -208,6 +209,7 @@ class Notifier:
         """
         # send DD event
         if self.datadog_api_key:
+            self.datadog(True)
             self.set_title(title)
             self.set_text(text)
             self.set_tags(tags)
@@ -217,15 +219,27 @@ class Notifier:
         # send slack notification
         if self.slack_api_key:
             # TODO: implement
+            self.slack(True)
             self.set_title(title)
             self.set_text(text)
             self.send()
 
         # create jira issue
         if self.jira_api_key:
+            self.jira(True)
             self.set_title(title)
             self.set_text(text)
             self.set_tags(tags)
             self.set_fallback_comment_text(jira_fallback_comment_text)
             self.set_update_text_body(jira_update_text_body)
             self.send()
+
+# Testing code, remove before merging
+if __name__ == "__main__":
+    notif = Notifier(jira_api_key="")
+    notif.jira(True)
+    notif.set_title("Title")
+    notif.set_text("Text")
+    notif.set_fallback_comment_text("Comment")
+    notif.set_update_text_body(True)
+    notif.send()
