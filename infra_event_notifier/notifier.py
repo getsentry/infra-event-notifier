@@ -18,7 +18,21 @@ class Notifier:
         self.jira_api_key = None
         self.jira_config = None
 
+        # Notification fields
+        self.title = None
+        self.text = None
+        self.tags = {}
+        self.alert_type = None
+        self.fallback_comment_text = None
+        self.update_text_body = None
+
     def with_datadog(self, datadog_api_key: str) -> Self:
+        """
+        Specify that the notification is for Datadog.
+
+        Args:
+            datadog_api_key (str): Datadog API Key
+        """
         self.datadog_api_key = datadog_api_key
         return self
 
@@ -29,6 +43,15 @@ class Notifier:
         jira_user_email: str,
         jira_api_key: str,
     ) -> Self:
+        """
+        Specify that the notification is for Jira.
+
+        Args:
+            jira_url (str): Jira URL
+            jira_project (str): Jira Project string
+            jira_user_email (str): Jira user email
+            jira_api_key (str): Jira API Key
+        """
         self.jira_api_key = jira_api_key
         self.jira_config = JiraConfig(
             url=jira_url,
@@ -38,8 +61,117 @@ class Notifier:
         return self
 
     def with_slack(self, slack_api_key: str) -> Self:
+        """
+        Specify that the notification is for Slack.
+
+        Args:
+            slack_api_key (str): Slack API Key
+        """
         self.slack_api_key = slack_api_key
         return self
+    
+    def set_title(self, title: str):
+        """
+        (Required) Sets the title for the notification
+        
+        Args:
+            title (str): Notification title
+        """
+        self.title = title
+    
+    def set_text(self, text: str):
+        """
+        (Required) Sets the main text for the notification
+        
+        Args:
+            text (str): Notification text
+        """
+        self.text = text
+
+    def set_tags(self, tags: Mapping[str, str]):
+        """
+        (Optional) Sets additional tags for the notification
+        Used with Datadog and Jira. Defaults to {}.
+        
+        Args:
+            tags (Mapping[str, str]): Notification tags
+        """
+        self.tags = tags
+
+    def set_alert_type(self, alert_type:str):
+        """
+        (Optional) Sets Datadog alert type
+        Used with Datadog. Defaults to None.
+        
+        Args:
+            alert_type (str): Alert Type
+        """
+        self.alert_type = alert_type
+
+    def set_fallback_comment_text(self, jira_fallback_comment_text: str):
+        """
+        (Optional) Sets the backup comment text
+        Used with Jira. Defaults to None.
+        
+        Args:
+            jira_fallback_comment_text (str): Fallback comment text
+        """
+        self.fallback_comment_text = jira_fallback_comment_text
+
+    def set_update_text_body(self, update_text_body:bool):
+        """
+        (Optional) Sets whether to update the Jira ticket body (if already existing)
+        Used with Jira. Defaults to None.
+        
+        Args:
+            update_text_body (bool): Update ticket body?
+        """
+        self.update_text_body = update_text_body
+
+    def send(self)->bool:
+        """
+        Sends notifications to whatever backends were configured via with_{backend}()
+        For more details on each backend see their respective file
+        
+        Returns True if the notification was successfully sent, False otherwise
+        """
+        # send DD event
+        if self.datadog_api_key:
+            if self.title != None and self.text != None:
+                return send_event(
+                    title=self.title,
+                    text=self.text,
+                    tags=self.tags,
+                    datadog_api_key=self.datadog_api_key,
+                    alert_type=self.alert_type,
+                )
+            return False
+
+        # send slack notification
+        if self.slack_api_key:
+            # TODO: implement
+            if self.title != None and self.text != None:
+                return send_notification(
+                    title=self.title, text=self.text, slack_api_key=self.slack_api_key
+                )
+            return False
+
+        # create jira issue
+        if self.jira_api_key:
+            if self.title != None and self.text != None:
+                return create_or_update_issue(
+                    jira=self.jira_config,
+                    title=self.title,
+                    text=self.text,
+                    tags=self.tags,
+                    fallback_comment_text=self.fallback_comment_text,
+                    update_text_body=self.update_text_body,
+                    jira_api_key=self.jira_api_key,
+                )
+            return False
+
+        return False
+
 
     def notify(
         self,
