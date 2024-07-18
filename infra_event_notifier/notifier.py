@@ -28,7 +28,7 @@ class Notifier:
 
     def with_datadog(self, datadog_api_key: str) -> Self:
         """
-        Specify that the notification is for Datadog.
+        Specify that the event is for Datadog.
 
         Args:
             datadog_api_key (str): Datadog API Key
@@ -44,7 +44,7 @@ class Notifier:
         jira_api_key: str,
     ) -> Self:
         """
-        Specify that the notification is for Jira.
+        Specify that the event is for Jira.
 
         Args:
             jira_url (str): Jira URL
@@ -62,7 +62,7 @@ class Notifier:
 
     def with_slack(self, slack_api_key: str) -> Self:
         """
-        Specify that the notification is for Slack.
+        Specify that the event is for Slack.
 
         Args:
             slack_api_key (str): Slack API Key
@@ -70,70 +70,77 @@ class Notifier:
         self.slack_api_key = slack_api_key
         return self
     
-    def set_title(self, title: str):
+    def set_title(self, title: str) -> Self:
         """
-        (Required) Sets the title for the notification
+        (Required) Title for the event
         
         Args:
-            title (str): Notification title
+            title (str): Event title
         """
         self.title = title
+        return self
     
-    def set_text(self, text: str):
+    def set_text(self, text: str) -> Self:
         """
-        (Required) Sets the main text for the notification
+        (Required) Main body of the event
         
         Args:
-            text (str): Notification text
+            text (str): Event body text
         """
         self.text = text
+        return self
 
-    def set_tags(self, tags: Mapping[str, str]):
+    def set_tags(self, tags: Mapping[str, str]) -> Self:
         """
-        (Optional) Sets additional tags for the notification
-        Used with Datadog and Jira. Defaults to {}.
+        (Optional) List of tags to add to datadog event/jira issue
+        Used to identify and update jira issues if one already exists with the given
+        title and tags. Defaults to {}.
         
         Args:
-            tags (Mapping[str, str]): Notification tags
+            tags (Mapping[str, str]): Event tags
         """
         self.tags = tags
+        return self
 
-    def set_alert_type(self, alert_type:str):
+    def set_alert_type(self, alert_type:str) -> Self:
         """
-        (Optional) Sets Datadog alert type
-        Used with Datadog. Defaults to None.
+        (Optional) Alert type for datadog event, see
+        https://docs.datadoghq.com/api/latest/events/ for details. Defaults to None.
         
         Args:
             alert_type (str): Alert Type
         """
         self.alert_type = alert_type
+        return self
 
-    def set_fallback_comment_text(self, jira_fallback_comment_text: str):
+    def set_fallback_comment_text(self, jira_fallback_comment_text: str) -> Self:
         """
-        (Optional) Sets the backup comment text
-        Used with Jira. Defaults to None.
+        (Optional) Optional comment to include on jira issue if
+        issue already exists. Defaults to None.
         
         Args:
             jira_fallback_comment_text (str): Fallback comment text
         """
         self.fallback_comment_text = jira_fallback_comment_text
+        return self
 
-    def set_update_text_body(self, update_text_body:bool):
+    def set_update_text_body(self, update_text_body:bool) -> Self:
         """
-        (Optional) Sets whether to update the Jira ticket body (if already existing)
-        Used with Jira. Defaults to None.
+        (Optional) If set, will update the body of an existing Jira issue with whatever is passed
+        as the `text` parameter. Defaults to None.
         
         Args:
             update_text_body (bool): Update ticket body?
         """
         self.update_text_body = update_text_body
+        return self
 
     def send(self)->bool:
         """
         Sends notifications to whatever backends were configured via with_{backend}()
         For more details on each backend see their respective file
         
-        Returns True if the notification was successfully sent, False otherwise
+        Returns True if the event was successfully sent, False otherwise
         """
         # send DD event
         if self.datadog_api_key:
@@ -157,7 +164,7 @@ class Notifier:
             return False
 
         # create jira issue
-        if self.jira_api_key:
+        if self.jira_api_key and self.jira_config:
             if self.title != None and self.text != None:
                 return create_or_update_issue(
                     jira=self.jira_config,
@@ -201,29 +208,24 @@ class Notifier:
         """
         # send DD event
         if self.datadog_api_key:
-            send_event(
-                title=title,
-                text=text,
-                tags=tags,
-                datadog_api_key=self.datadog_api_key,
-                alert_type=datadog_alert_type,
-            )
+            self.set_title(title)
+            self.set_text(text)
+            self.set_tags(tags)
+            self.set_alert_type(datadog_alert_type)
+            self.send()
 
         # send slack notification
         if self.slack_api_key:
             # TODO: implement
-            send_notification(
-                title=title, text=text, slack_api_key=self.slack_api_key
-            )
+            self.set_title(title)
+            self.set_text(text)
+            self.send()
 
         # create jira issue
         if self.jira_api_key:
-            create_or_update_issue(
-                jira=self.jira_config,
-                title=title,
-                text=text,
-                tags=tags,
-                fallback_comment_text=jira_fallback_comment_text,
-                update_text_body=jira_update_text_body,
-                jira_api_key=self.jira_api_key,
-            )
+            self.set_title(title)
+            self.set_text(text)
+            self.set_tags(tags)
+            self.set_fallback_comment_text(jira_fallback_comment_text)
+            self.set_update_text_body(jira_update_text_body)
+            self.send()
