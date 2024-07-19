@@ -22,14 +22,13 @@ class Notifier:
         self.slack_api_key = slack_api_key
         # jira fields
         self.jira_api_key = jira_api_key
-        if jira_api_key:
+        self.jira_config = None
+        if jira_api_key != None:
             self.jira_config = JiraConfig(
                 url=jira_url,
                 user_email=jira_user_email,
                 project_key=jira_project,
             )
-        else:
-            self.jira_config = None
 
         self.use_slack = False
         self.use_datadog = False
@@ -39,6 +38,7 @@ class Notifier:
         self.title = None
         self.text = None
         self.tags = {}
+        self.issue_type = None
         self.alert_type = None
         self.fallback_comment_text = None
         self.update_text_body = None
@@ -108,6 +108,17 @@ class Notifier:
         self.tags = tags
         return self
 
+    def set_issue_type(self, issue_type:str) -> Self:
+        """
+        (Optional) Issue type for datadog event, see
+        https://docs.datadoghq.com/api/latest/events/ for details. Defaults to None.
+        
+        Args:
+            issue_type (str): issue Type
+        """
+        self.issue_type = issue_type
+        return self
+    
     def set_alert_type(self, alert_type:str) -> Self:
         """
         (Optional) Alert type for datadog event, see
@@ -150,7 +161,7 @@ class Notifier:
         """
         # send DD event
         if self.use_datadog:
-            if self.datadog_api_key and self.title and self.text:
+            if self.datadog_api_key is not None and self.title and self.text:
                 send_event(
                     title=self.title,
                     text=self.text,
@@ -162,19 +173,20 @@ class Notifier:
         # send slack notification
         if self.use_slack:
             # TODO: implement
-            if self.slack_api_key and self.title and self.text:
+            if self.slack_api_key is not None and self.title and self.text:
                 send_notification(
                     title=self.title, text=self.text, slack_api_key=self.slack_api_key
                 )
 
         # create jira issue
         if self.use_jira:
-            if self.jira_api_key and self.jira_config and self.title and self.text:
+            if self.jira_api_key is not None and self.jira_config and self.title and self.text:
                 create_or_update_issue(
                     jira=self.jira_config,
                     title=self.title,
                     text=self.text,
                     tags=self.tags,
+                    issue_type=self.issue_type,
                     fallback_comment_text=self.fallback_comment_text,
                     update_text_body=self.update_text_body,
                     jira_api_key=self.jira_api_key,
@@ -236,10 +248,19 @@ class Notifier:
 
 # Testing code, remove before merging
 if __name__ == "__main__":
-    notif = Notifier(jira_api_key="")
+    notif = Notifier(jira_api_key="", 
+                     jira_project="", # Must be the id of the project, not the name
+                     jira_url="https://getsentry.atlassian.net/", 
+                     jira_user_email="")
     notif.jira(True)
-    notif.set_title("Title")
-    notif.set_text("Text")
-    notif.set_fallback_comment_text("Comment")
+    notif.set_title("[TEST] Title")
+    notif.set_text("New Test Body 4")
+    notif.set_tags({
+        "region": "TESTINC",
+        "service":"test-infra-event-notifier",
+        "issue_type":"test_issue"
+    })
+    notif.set_issue_type("Task")
+    notif.set_fallback_comment_text("Test Comment")
     notif.set_update_text_body(True)
     notif.send()

@@ -2,6 +2,7 @@ from urllib.request import Request, urlopen
 import json
 from base64 import b64encode
 from typing import Mapping
+from urllib.parse import quote_plus
 
 MAX_JIRA_DESCRIPTION_LENGTH = 32000
 
@@ -28,9 +29,7 @@ def http_basic_auth(username: str, api_key: str, req: Request) -> Request:
         api_key (str): API key for basic auth
         req (Request): Request object to attach headers to
     """
-    username = username.encode("latin1")
-    api_key = api_key.encode("latin1")
-    base64string = b64encode(bytes(f"{username}:{api_key}", "ascii"))
+    base64string = b64encode(bytes(f"{username}:{api_key}", "utf-8"))
     req.add_header("Authorization", f"Basic {base64string.decode('utf-8')}")
     return req
 
@@ -40,6 +39,7 @@ def create_or_update_issue(
     title: str,
     text: str,
     tags: Mapping[str, str],
+    issue_type: str,
     jira_api_key: str,
     fallback_comment_text: str | None,
     update_text_body: bool | None,
@@ -56,90 +56,104 @@ def create_or_update_issue(
         tags (Mapping[str, str], optional): List of tags to add to jira issue
             Used to identify and update jira issues if one already exists with the given
             title and tags. Defaults to {}.
+        issue_type (str): Type of issue. Can be: Task | Story | Bug | Epic
         fallback_comment_text (str | None, optional): Optional comment to include on jira issue if
             issue already exists. Defaults to None.
         update_text_body (bool | None, optional): If set, will update the body of an existing Jira issue with whatever is passed
             as the `text` parameter. Defaults to None.
         jira_api_key (str): Jira API key
     """
-    print(title)
-    return 
-    if key := _find_jira_issue(jira, title, tags, jira_api_key):
+    # _create_jira_issue(jira, title, text, tags, issue_type, jira_api_key)
+    # return
+    key = _find_jira_issue(jira, title, tags, jira_api_key)
+    # return
+    if key is not None:
+        print("Issue Found")
         if update_text_body:
-            _update_jira_issue(jira, tags, text, key, jira_api_key)
+            print("Attempting to update")
+            _update_jira_issue(jira, key, text, jira_api_key)
         if fallback_comment_text:
+            print("Adding comment")
             _add_jira_comment(jira, key, fallback_comment_text, jira_api_key)
     else:
-        _create_jira_issue(jira, tags, text, jira_api_key)
+        print("Creating new Issue")
+        _create_jira_issue(jira, title, text, tags, issue_type, jira_api_key)
 
 
 # TODO: make generic, port to urllib
 def _create_jira_issue(
-    jira: JiraConfig, region: str, service: str, body: str, api_key: str
+    jira: JiraConfig, 
+    title: str, 
+    body: str, 
+    tags: Mapping[str, str], 
+    issue_type: str, 
+    api_key: str
 ):
     """
     Attempts to create a new jira issue.
     """
     api_url = f"{jira.url}/rest/api/2/issue"
-    issue_data = {
+    payload = {
         "fields": {
             "project": {"key": jira.project_key},
-            "summary": f"[Drift Detection]: {region} {service} drifted",
-            "description": f"There has been drift detected on {service} for {region}.\n\n{body}",
-            "issuetype": {"name": "Task"},
-            "labels": [
-                f"region:{region}",
-                f"service:{service}",
-                "issue_type:drift_detection",
-            ],
+            "summary": title,
+            "description": body,
+            "issuetype": {"name": issue_type},
+            "labels": [f"{k}:{v}" for k, v in tags.items()],
         }
     }
-
-    response = requests.post(
-        api_url,
-        json=issue_data,
-        auth=HTTPBasicAuth(jira.user_email, jira.api_token),
-        headers={"Content-Type": "application/json"},
+    json_data = json.dumps(payload)
+    data = json_data.encode("utf-8")
+    req = Request(
+        api_url, data=data, method="POST"
     )
+    req = http_basic_auth(jira.user_email, api_key, req)
+    req.add_header("Content-Type", "application/json")
 
-    if response.status_code == 201:
-        return response
-    else:
-        raise JiraApiException(
-            f"Failed to create issue: {response.status_code}, {response.text}"
-        )
+    with urlopen(req) as response:
+        status = response.status
+
+        if status == 201:
+            return response
+        else:
+            raise JiraApiException(
+                f"Failed to create issue: {response.status_code}, {response.text}"
+            )
 
 
 # TODO: make generic, port to urllib
 def _update_jira_issue(
     jira: JiraConfig,
-    region: str,
-    service: str,
-    body: str,
     issue_key: str,
+    body: str,
     api_key: str,
 ):
     """
     Attempts to update a jira issue given the issue key.
     """
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}"
-    issue_data = {
+    payload = {
         "fields": {
-            "description": f"There has been drift detected on {service} for {region}.\n\n{body}"
+            "description": body
         }
     }
-    response = requests.put(
-        api_url,
-        json=issue_data,
-        auth=HTTPBasicAuth(jira.user_email, jira.api_token),
-        headers={"Content-Type": "application/json"},
+    json_data = json.dumps(payload)
+    data = json_data.encode("utf-8")
+    req = Request(
+        api_url, data=data, method="PUT"
     )
-    if response.status_code == 204:
-        return response
-    else:
-        raise JiraApiException(
-            f"Failed to update issue: {response.status_code}, {response.text}"
-        )
+    req = http_basic_auth(jira.user_email, api_key, req)
+    req.add_header("Content-Type", "application/json")
+
+    with urlopen(req) as response:
+        status = response.status
+
+        if status == 204:
+            return response
+        else:
+            raise JiraApiException(
+                f"Failed to update issue: {response.status_code}, {response.text}"
+            )
 
 
 # TODO: make generic, port to urllib
@@ -151,20 +165,23 @@ def _add_jira_comment(
     """
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}/comment"
     payload = {"body": comment}
-    response = requests.post(
-        api_url,
-        json=payload,
-        auth=HTTPBasicAuth(jira.user_email, jira.api_token),
-        headers={
-            "Content-Type": "application/json",
-        },
+    json_data = json.dumps(payload)
+    data = json_data.encode("utf-8")
+    req = Request(
+        api_url, data=data, method="POST"
     )
-    if response.status_code == 201:
-        return response
-    else:
-        raise JiraApiException(
-            f"Failed to update issue: {response.status_code}, {response.text}"
-        )
+    req = http_basic_auth(jira.user_email, api_key, req)
+    req.add_header("Content-Type", "application/json")
+
+    with urlopen(req) as response:
+        status = response.status
+
+        if status == 201:
+            return response
+        else:
+            raise JiraApiException(
+                f"Failed to update issue: {response.status_code}, {response.text}"
+            )
 
 
 # TODO: fix 400 response from Jira
@@ -177,29 +194,29 @@ def _find_jira_issue(
     api_url = f"{jira.url}/rest/api/2/search"
 
     jql = (
-        f'project = "{jira.project_key}" '
-        'AND status != "CLOSED" '
-        'AND status != "DONE"'
+        f'project = {jira.project_key} '
+        # 'AND status != Closed '
+        # 'AND status != DONE'
     )
     for key in tags:
-        jql += f' AND labels = "{key}:{tags[key]}"'
+        jql += f' AND labels = {key}:{tags[key]}'
 
     payload = {"jql": jql, "fields": ["id", "key", "summary", "status"]}
 
     data = json.dumps(payload)
     data = data.encode("utf-8")
-    req = Request(api_url, data=data)
+    req = Request(api_url, data=data, method="POST")
     req = http_basic_auth(jira.user_email, api_key, req)
     req.add_header("Accept", "application/json")
     req.add_header("Content-Type", "application/json")
 
     with urlopen(req) as response:
-        res_body = response.read().decode()
+        res_body = json.loads(response.read().decode())
         status = response.status
         print(res_body)
         print(status)
         if status == 200:
-            issues = response.json()["issues"]
+            issues = res_body["issues"]
             if issues:
                 return issues[0]["key"]
             return None
