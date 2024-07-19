@@ -21,7 +21,6 @@ class Notifier:
         # slack fields
         self.slack_api_key = slack_api_key
         # jira fields
-        self.jira_api_key = jira_api_key
         self.jira_config = None
         if jira_api_key != None:
             self.jira_config = JiraConfig(
@@ -180,7 +179,7 @@ class Notifier:
 
         # create jira issue
         if self.use_jira:
-            if self.jira_api_key is not None and self.jira_config and self.title and self.text:
+            if self.jira_config is not None and self.title and self.text:
                 create_or_update_issue(
                     jira=self.jira_config,
                     title=self.title,
@@ -188,8 +187,7 @@ class Notifier:
                     tags=self.tags,
                     issue_type=self.issue_type,
                     fallback_comment_text=self.fallback_comment_text,
-                    update_text_body=self.update_text_body,
-                    jira_api_key=self.jira_api_key,
+                    update_text_body=self.update_text_body
                 )
 
 
@@ -249,7 +247,7 @@ class Notifier:
 # Testing code, remove before merging
 if __name__ == "__main__":
     notif = Notifier(jira_api_key="", 
-                     jira_project="", # Must be the id of the project, not the name
+                     jira_project="TESTINC", # Must be the id of the project, not the name
                      jira_url="https://getsentry.atlassian.net/", 
                      jira_user_email="")
     notif.jira(True)

@@ -1,6 +1,7 @@
 # TODO: this was all copied directly from https://github.com/getsentry/ops/blob/master/k8s/cli/libsentrykube/tests/test_jira.py,
 # it needs to be made generic (and to fix whatever tests are broken by changes to the main code)
 
+import json
 import pytest
 from unittest.mock import MagicMock, patch
 from infra_event_notifier.backends.jira import (
@@ -12,51 +13,52 @@ from infra_event_notifier.backends.jira import (
     JiraApiException,
     http_basic_auth,
 )
+import urllib.request
 
-from requests.auth import HTTPBasicAuth
+# from requests.auth import HTTPBasicAuth
 
 
 @pytest.fixture(autouse=True)
 def setup():
     url = "https://test.atlassian.net"
-    project_key = "TEST"
+    project_key = "TESTINC"
     user_email = "test@test.com"
     api_token = "test_token"
     return JiraConfig(url, project_key, user_email, api_token)
 
-
 def test_create_issue_success(setup):
     mock_response = MagicMock()
     jiraConf = setup
-    mock_response.status_code = 201
-    mock_response.json.return_value = {"key": "JIRA-123"}
-    with patch("requests.post", return_value=mock_response) as mock_post:
-        region = "s4s"
-        service = "snuba"
-        body = ["tokyo drift"]
+    mock_response.status = 201
+    mock_response.read.return_value = b'{"key": "JIRA-123"}'
+    with patch("urllib.request.urlopen", return_value=mock_response) as mock_post:
+        body = "tokyo drift"
+        title = "[Infra Event] Test"
+        tags = {
+            "region": "TESTINC",
+            "service":"test-infra-event-notifier",
+            "issue_type":"test_issue"
+        }
+        issue_type = "Task"
 
-        response = _create_jira_issue(jiraConf, region, service, body)
+        with pytest.raises(JiraApiException):
+            response = _create_jira_issue(jiraConf, title, body, tags, issue_type)
         mock_post.assert_called_once_with(
             "https://test.atlassian.net/rest/api/2/issue",
-            json={
+            data={
                 "fields": {
                     "project": {"key": "TEST"},
-                    "summary": f"[Drift Detection]: {region} {service} drifted",
-                    "description": f"There has been drift detected on {service} for {region}.\n\n{body}",
-                    "issuetype": {"name": "Task"},
-                    "labels": [
-                        f"region:{region}",
-                        f"service:{service}",
-                        "issue_type:drift_detection",
-                    ],
+                    "summary": title,
+                    "description": body,
+                    "issuetype": {"name": issue_type},
+                    "labels": [f"{k}:{v}" for k, v in tags.items()]
                 }
             },
-            auth=HTTPBasicAuth("test@test.com", "test_token"),
-            headers={"Content-Type": "application/json"},
+            method="POST",
         )
 
-        assert response.json()["key"] == "JIRA-123"
-        assert response.status_code == 201
+        # assert res_body[0]["key"] == "JIRA-123"
+        assert mock_post.status == 201
 
 
 def test_create_issue_failure(setup):

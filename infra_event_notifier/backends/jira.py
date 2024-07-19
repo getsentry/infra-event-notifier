@@ -8,10 +8,11 @@ MAX_JIRA_DESCRIPTION_LENGTH = 32000
 
 
 class JiraConfig:
-    def __init__(self, url: str, project_key: str, user_email: str):
+    def __init__(self, url: str, project_key: str, user_email: str, api_key: str):
         self.url = url
         self.project_key = project_key
         self.user_email = user_email
+        self.api_key = api_key
 
 
 class JiraApiException(Exception):
@@ -40,7 +41,6 @@ def create_or_update_issue(
     text: str,
     tags: Mapping[str, str],
     issue_type: str,
-    jira_api_key: str,
     fallback_comment_text: str | None,
     update_text_body: bool | None,
 ):
@@ -65,19 +65,19 @@ def create_or_update_issue(
     """
     # _create_jira_issue(jira, title, text, tags, issue_type, jira_api_key)
     # return
-    key = _find_jira_issue(jira, title, tags, jira_api_key)
+    key = _find_jira_issue(jira, title, tags)
     # return
     if key is not None:
         print("Issue Found")
         if update_text_body:
             print("Attempting to update")
-            _update_jira_issue(jira, key, text, jira_api_key)
+            _update_jira_issue(jira, key, text)
         if fallback_comment_text:
             print("Adding comment")
-            _add_jira_comment(jira, key, fallback_comment_text, jira_api_key)
+            _add_jira_comment(jira, key, fallback_comment_text)
     else:
         print("Creating new Issue")
-        _create_jira_issue(jira, title, text, tags, issue_type, jira_api_key)
+        _create_jira_issue(jira, title, text, tags, issue_type)
 
 
 # TODO: make generic, port to urllib
@@ -86,12 +86,12 @@ def _create_jira_issue(
     title: str, 
     body: str, 
     tags: Mapping[str, str], 
-    issue_type: str, 
-    api_key: str
+    issue_type: str
 ):
     """
     Attempts to create a new jira issue.
     """
+    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/issue"
     payload = {
         "fields": {
@@ -125,12 +125,12 @@ def _create_jira_issue(
 def _update_jira_issue(
     jira: JiraConfig,
     issue_key: str,
-    body: str,
-    api_key: str,
+    body: str
 ):
     """
     Attempts to update a jira issue given the issue key.
     """
+    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}"
     payload = {
         "fields": {
@@ -158,11 +158,12 @@ def _update_jira_issue(
 
 # TODO: make generic, port to urllib
 def _add_jira_comment(
-    jira: JiraConfig, issue_key: str, comment: str, api_key: str
+    jira: JiraConfig, issue_key: str, comment: str
 ):
     """
     Adds a comment to the given jira issue.
     """
+    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}/comment"
     payload = {"body": comment}
     json_data = json.dumps(payload)
@@ -186,11 +187,12 @@ def _add_jira_comment(
 
 # TODO: fix 400 response from Jira
 def _find_jira_issue(
-    jira: JiraConfig, title: str, tags: Mapping[str, str], api_key: str
+    jira: JiraConfig, title: str, tags: Mapping[str, str]
 ):
     """
     Looks for an open existing jira issue. Return issue key if issue exists, otherwise return nothing.
     """
+    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/search"
 
     jql = (
