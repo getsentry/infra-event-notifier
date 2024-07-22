@@ -42,6 +42,6 @@ class Notifier:
             create_issue(
                 title=title,
                 text=text,
-                tags=tags,
+                labels=tags,
                 jira_api_key=self.jira_api_key,
             )
