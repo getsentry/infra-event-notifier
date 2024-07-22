@@ -1,3 +1,4 @@
+import os
 from typing import Mapping, Self
 
 from infra_event_notifier.backends.datadog import send_event
@@ -27,6 +28,7 @@ class Notifier:
                 url=jira_url,
                 user_email=jira_user_email,
                 project_key=jira_project,
+                api_key=jira_api_key
             )
 
         self.use_slack = False
@@ -246,10 +248,10 @@ class Notifier:
 
 # Testing code, remove before merging
 if __name__ == "__main__":
-    notif = Notifier(jira_api_key="", 
+    notif = Notifier(jira_api_key=os.getenv("JIRA_API_KEY", ""), 
                      jira_project="TESTINC", # Must be the id of the project, not the name
                      jira_url="https://getsentry.atlassian.net/", 
-                     jira_user_email="")
+                     jira_user_email=os.getenv("JIRA_USER_EMAIL", ""))
     notif.jira(True)
     notif.set_title("[TEST] Title")
     notif.set_text("New Test Body 4")

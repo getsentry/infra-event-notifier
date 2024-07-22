@@ -1,8 +1,10 @@
-from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+from urllib.request import Request
 import json
 from base64 import b64encode
 from typing import Mapping
 from urllib.parse import quote_plus
+import urllib.request # must use urllib.request.urlopen() in order to do tests
 
 MAX_JIRA_DESCRIPTION_LENGTH = 32000
 
@@ -109,15 +111,14 @@ def _create_jira_issue(
     )
     req = http_basic_auth(jira.user_email, api_key, req)
     req.add_header("Content-Type", "application/json")
-
-    with urlopen(req) as response:
+    
+    with urllib.request.urlopen(req) as response:
         status = response.status
-
         if status == 201:
             return response
         else:
             raise JiraApiException(
-                f"Failed to create issue: {response.status_code}, {response.text}"
+                f"Failed to create issue: {response.status}, {response.text}"
             )
 
 
@@ -145,7 +146,7 @@ def _update_jira_issue(
     req = http_basic_auth(jira.user_email, api_key, req)
     req.add_header("Content-Type", "application/json")
 
-    with urlopen(req) as response:
+    with urllib.request.urlopen(req) as response:
         status = response.status
 
         if status == 204:
@@ -174,7 +175,7 @@ def _add_jira_comment(
     req = http_basic_auth(jira.user_email, api_key, req)
     req.add_header("Content-Type", "application/json")
 
-    with urlopen(req) as response:
+    with urllib.request.urlopen(req) as response:
         status = response.status
 
         if status == 201:
@@ -212,11 +213,10 @@ def _find_jira_issue(
     req.add_header("Accept", "application/json")
     req.add_header("Content-Type", "application/json")
 
-    with urlopen(req) as response:
+    with urllib.request.urlopen(req) as response:
         res_body = json.loads(response.read().decode())
         status = response.status
-        print(res_body)
-        print(status)
+        
         if status == 200:
             issues = res_body["issues"]
             if issues:
