@@ -1,9 +1,10 @@
-from typing import cast, Optional, Sequence
+from typing import cast, Optional, Mapping
 import requests
 from requests.auth import HTTPBasicAuth
 
 
 MAX_JIRA_DESCRIPTION_LENGTH = 32000
+
 
 class JiraConfig:
     def __init__(
@@ -22,7 +23,7 @@ class JiraApiException(Exception):
 
 
 def create_issue(
-    title: str, text: str, labels: Sequence[str], jira: JiraConfig
+    title: str, text: str, tags: Mapping[str, str], jira: JiraConfig
 ) -> requests.Response:
     api_url = f"{jira.url}/rest/api/2/issue"
 
@@ -32,7 +33,7 @@ def create_issue(
             "summary": title,
             "description": text[:MAX_JIRA_DESCRIPTION_LENGTH],
             "issuetype": {"name": "Task"},
-            "labels": labels,
+            "labels": [f"{key}:{val}" for key, val in tags.items()],
         }
     }
 
@@ -52,10 +53,16 @@ def create_issue(
 
 
 def update_issue(
-    jira: JiraConfig, issue_key: str, title: str, text: str
+    jira: JiraConfig,
+    issue_key: str,
+    title: str,
+    text: str,
+    tags: Mapping[str, str],
 ) -> requests.Response:
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}"
-    issue_data = {"fields": {"description": text[:MAX_JIRA_DESCRIPTION_LENGTH]}}
+    issue_data = {
+        "fields": {"description": text[:MAX_JIRA_DESCRIPTION_LENGTH]}
+    }
     response = requests.put(
         api_url,
         json=issue_data,
@@ -89,7 +96,7 @@ def comment_on_issue(
         )
 
 
-def find_issue(jira: JiraConfig, labels: Sequence[str]) -> Optional[str]:
+def find_issue(jira: JiraConfig, tags: Mapping[str, str]) -> Optional[str]:
     """
     Searches for a jira issue by labels. Returns the issue key.
     All labels must match, and only the first match is returned.
@@ -97,7 +104,9 @@ def find_issue(jira: JiraConfig, labels: Sequence[str]) -> Optional[str]:
 
     api_url = f"{jira.url}/rest/api/2/search"
 
-    jql = f'project = "{jira.project_key}" AND labels in ({", ".join(f"\'{label}\'" for label in labels)})'
+    jql = f'project = "{jira.project_key}" AND '
+
+    jql += " AND ".join([f"labels = {key}:{val}" for key, val in tags.items()])
 
     params = {"jql": jql, "fields": "id,key,summary,status"}
 
