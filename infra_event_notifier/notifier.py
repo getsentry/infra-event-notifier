@@ -253,8 +253,8 @@ if __name__ == "__main__":
                      jira_url="https://getsentry.atlassian.net/", 
                      jira_user_email=os.getenv("JIRA_USER_EMAIL", ""))
     notif.jira(True)
-    notif.set_title("[TEST] Title")
-    notif.set_text("New Test Body 4")
+    notif.set_title("Test Infra-Event-Notifier")
+    notif.set_text("test updating")
     notif.set_tags({
         "region": "TESTINC",
         "service":"test-infra-event-notifier",

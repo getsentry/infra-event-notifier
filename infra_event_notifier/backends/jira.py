@@ -65,10 +65,7 @@ def create_or_update_issue(
             as the `text` parameter. Defaults to None.
         jira_api_key (str): Jira API key
     """
-    # _create_jira_issue(jira, title, text, tags, issue_type, jira_api_key)
-    # return
     key = _find_jira_issue(jira, title, tags)
-    # return
     if key is not None:
         print("Issue Found")
         if update_text_body:
@@ -82,7 +79,6 @@ def create_or_update_issue(
         _create_jira_issue(jira, title, text, tags, issue_type)
 
 
-# TODO: make generic, port to urllib
 def _create_jira_issue(
     jira: JiraConfig, 
     title: str, 
@@ -122,7 +118,6 @@ def _create_jira_issue(
             )
 
 
-# TODO: make generic, port to urllib
 def _update_jira_issue(
     jira: JiraConfig,
     issue_key: str,
@@ -157,7 +152,6 @@ def _update_jira_issue(
             )
 
 
-# TODO: make generic, port to urllib
 def _add_jira_comment(
     jira: JiraConfig, issue_key: str, comment: str
 ):
@@ -185,8 +179,8 @@ def _add_jira_comment(
                 f"Failed to update issue: {response.status_code}, {response.text}"
             )
 
-
-# TODO: fix 400 response from Jira
+# Find the jira issue using only the tags
+# Not sure if we should also include the issue title in the search
 def _find_jira_issue(
     jira: JiraConfig, title: str, tags: Mapping[str, str]
 ):
@@ -198,8 +192,8 @@ def _find_jira_issue(
 
     jql = (
         f'project = {jira.project_key} '
-        # 'AND status != Closed '
-        # 'AND status != DONE'
+        'AND status != Closed '
+        'AND status != DONE'
     )
     for key in tags:
         jql += f' AND labels = {key}:{tags[key]}'
@@ -216,7 +210,7 @@ def _find_jira_issue(
     with urllib.request.urlopen(req) as response:
         res_body = json.loads(response.read().decode())
         status = response.status
-        
+
         if status == 200:
             issues = res_body["issues"]
             if issues:
