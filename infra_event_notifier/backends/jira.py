@@ -221,17 +221,3 @@ def _find_jira_issue(
                 f"Failed to search issues: {status}, {response.reason}"
             )
 
-
-# testing code, remove before merging
-if __name__ == "__main__":
-    key = _find_jira_issue(
-        JiraConfig(
-            url="https://getsentry.atlassian.net",
-            project_key="TESTINC",
-            user_email="ops-incident-bot@sentry.io",
-        ),
-        title="Test issue please ignore",
-        tags={"foo": "bar", "one": "two"},
-        api_key="fakeapikey",
-    )
-    print(key)
