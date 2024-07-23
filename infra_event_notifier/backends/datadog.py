@@ -49,7 +49,6 @@ def send_event(
                 hdrs=response.headers,
                 fp=None,
             )
-        return True
 
 
 # testing code, remove before merging
