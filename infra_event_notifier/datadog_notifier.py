@@ -5,8 +5,13 @@ from infra_event_notifier.notifier import Notifier
 
 
 class DatadogNotifier(Notifier):
-    def __init__(self, datadog_api_key: str) -> None:
-        super().__init__()
+    """
+    Class that supports sending Datadog notifications. A Title
+    and Body are required, as well as a Datadog API key.
+    """
+
+    def __init__(self, title: str, body: str, datadog_api_key: str) -> None:
+        super().__init__(title, body)
         self.datadog_api_key = datadog_api_key
 
         # Notification fields

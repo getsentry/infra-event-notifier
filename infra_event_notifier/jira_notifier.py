@@ -2,20 +2,28 @@ from typing import Dict, Self
 
 from infra_event_notifier.backends.jira import (
     JiraConfig,
+    JiraFields,
     create_or_update_issue,
 )
 from infra_event_notifier.notifier import Notifier
 
 
 class JiraNotifier(Notifier):
+    """
+    Class that supports sending Jira notifications. A Title and Body
+    are required, as well as Jira config settings.
+    """
+
     def __init__(
         self,
+        title: str,
+        body: str,
         jira_api_key: str,
         jira_url: str,
         jira_project: str,
         jira_user_email: str,
     ) -> None:
-        super().__init__()
+        super().__init__(title, body)
         self.jira_config = JiraConfig(
             url=jira_url,
             user_email=jira_user_email,
@@ -27,7 +35,7 @@ class JiraNotifier(Notifier):
         self.tags: Dict[str, str] = {}
         self.issue_type: str = "Task"
         self.fallback_comment_text: None | str = None
-        self.update_text_body: None | bool = None
+        self.update_text_body: bool = False
 
     def set_tags(self, tags: Dict[str, str]) -> Self:
         """
@@ -43,9 +51,9 @@ class JiraNotifier(Notifier):
 
     def set_issue_type(self, issue_type: str) -> Self:
         """
-        (Optional) Issue type for jira event, see
-        https://docs.datadoghq.com/api/latest/events/ for details.
-        Defaults to None.
+        (Optional) Issue type for jira event,
+        can be: Task | Story | Bug | Epic
+        Defaults to Task.
 
         Args:
             issue_type (str): issue Type
@@ -79,13 +87,14 @@ class JiraNotifier(Notifier):
         return self
 
     def send(self) -> None:
-        if self.jira_config is not None and self.title and self.body:
-            create_or_update_issue(
-                jira=self.jira_config,
-                title=self.title,
-                text=self.body,
-                tags=self.tags,
-                issue_type=self.issue_type,
-                fallback_comment_text=self.fallback_comment_text,
-                update_text_body=self.update_text_body,
-            )
+        assert self.jira_config is not None, "Notification missing config"
+        assert self.title is not None, "Notification missing title"
+        assert self.body is not None, "Notification missing body"
+
+        fields = JiraFields(self.title, self.body, self.tags, self.issue_type)
+        create_or_update_issue(
+            jira=self.jira_config,
+            fields=fields,
+            fallback_comment_text=self.fallback_comment_text,
+            update_text_body=self.update_text_body,
+        )

@@ -1,20 +1,56 @@
 import json
 import urllib.request  # must use urllib.request.urlopen() in order to do tests
 from base64 import b64encode
-from typing import Any, Mapping
+from typing import Any, Dict, Mapping
 from urllib.request import Request
 
 MAX_JIRA_DESCRIPTION_LENGTH = 32000
 
 
 class JiraConfig:
+    """
+    Contains Jira Config info
+
+    Args:
+        url (str): Base Jira API URL
+        project_key (str): Project ID of the project to create events for
+        user_email (str): Email of the User sending Jira issues
+        api_key (str): Jira API Key
+    """
+
     def __init__(
         self, url: str, project_key: str, user_email: str, api_key: str
-    ):
+    ) -> None:
         self.url = url
         self.project_key = project_key
         self.user_email = user_email
         self.api_key = api_key
+
+
+class JiraFields:
+    """
+    Contains the fields for a Jira Issue
+
+    Args:
+        title (str): Title of issue
+        text (str): Text body for issue
+        tags (Dict[str, str], optional): List of tags to add to jira issue
+            Used to identify and update jira issues if one already exists
+            with the given title and tags. Defaults to {}.
+        issue_type (str): Type of issue. Can be: Task | Story | Bug | Epic
+    """
+
+    def __init__(
+        self,
+        title: str,
+        text: str,
+        tags: Dict[str, str] = {},
+        issue_type: str = "Task",
+    ) -> None:
+        self.title = title
+        self.text = text
+        self.tags = tags
+        self.issue_type = issue_type
 
 
 class JiraApiException(Exception):
@@ -39,12 +75,9 @@ def http_basic_auth(username: str, api_key: str, req: Request) -> Request:
 
 def create_or_update_issue(
     jira: JiraConfig,
-    title: str,
-    text: str,
-    tags: Mapping[str, str],
-    issue_type: str,
+    fields: JiraFields,
     fallback_comment_text: str | None,
-    update_text_body: bool | None,
+    update_text_body: bool = False,
 ) -> None:
     """
     Attempts to create a Jira issue with the given title/text/tags.
@@ -52,32 +85,25 @@ def create_or_update_issue(
     that issue's text body and add a comment.
 
     Args:
-        jira (JiraConfig): Config containing URL/project/email
-        title (str): Title of issue
-        text (str): Text body for issue
-        tags (Mapping[str, str], optional): List of tags to add to jira issue
-            Used to identify and update jira issues if one already exists
-            with the given title and tags. Defaults to {}.
-        issue_type (str): Type of issue. Can be: Task | Story | Bug | Epic
+        jira (JiraConfig): Config containing URL/project/email/API Key
+        fields (JiraFields): Fields of the Jira Issue
         fallback_comment_text (str | None, optional): Optional comment to
             include on jira issue if issue already exists. Defaults to None.
-        update_text_body (bool | None, optional): If set, will update the
+        update_text_body (bool, optional): If set, will update the
             body of an existing Jira issue with whatever is passed
-            as the `text` parameter. Defaults to None.
+            as the `text` parameter. Defaults to False.
         jira_api_key (str): Jira API key
     """
-    key = _find_jira_issue(jira, title, tags)
+    key = _find_jira_issue(jira, fields.title, fields.tags)
     if key is not None:
-        print("Issue Found")
         if update_text_body:
-            print("Attempting to update")
-            _update_jira_issue(jira, key, text)
+            _update_jira_issue(jira, key, fields.text)
         if fallback_comment_text:
-            print("Adding comment")
             _add_jira_comment(jira, key, fallback_comment_text)
     else:
-        print("Creating new Issue")
-        _create_jira_issue(jira, title, text, tags, issue_type)
+        _create_jira_issue(
+            jira, fields.title, fields.text, fields.tags, fields.issue_type
+        )
 
 
 def _create_jira_issue(
@@ -175,7 +201,7 @@ def _add_jira_comment(
 # Not sure if we should also include the issue title in the search
 def _find_jira_issue(
     jira: JiraConfig, title: str, tags: Mapping[str, str]
-) -> Any | None:
+) -> Any:
     """
     Looks for an open existing jira issue. Return issue key if issue exists,
     otherwise return nothing.

@@ -2,10 +2,16 @@ from typing import Self
 
 
 class Notifier:
-    def __init__(self) -> None:
+    """
+    Generic class that supports sending notifications to various
+    output channels (Jira | Datadog | Slack). To use, see the
+    child classes (JiraNotifier | DatadogNotifier | SlackNotifier)
+    """
+
+    def __init__(self, title: str, body: str) -> None:
         # Notification fields
-        self.title: None | str = None
-        self.body: None | str = None
+        self.title: str = title
+        self.body: str = body
 
     def set_title(self, title: str) -> Self:
         """
