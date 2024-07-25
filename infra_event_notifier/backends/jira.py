@@ -92,7 +92,6 @@ def create_or_update_issue(
         update_text_body (bool, optional): If set, will update the
             body of an existing Jira issue with whatever is passed
             as the `text` parameter. Defaults to False.
-        jira_api_key (str): Jira API key
     """
     key = _find_jira_issue(jira, fields.title, fields.tags)
     if key is not None:

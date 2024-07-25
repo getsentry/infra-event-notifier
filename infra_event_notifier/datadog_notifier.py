@@ -1,57 +1,40 @@
-from typing import Dict, Self
+from typing import Dict
 
 from infra_event_notifier.backends.datadog import send_event
-from infra_event_notifier.notifier import Notifier
 
 
-class DatadogNotifier(Notifier):
+class DatadogNotifier:
     """
-    Class that supports sending Datadog notifications. A Title
-    and Body are required, as well as a Datadog API key.
+    Class that supports sending Datadog notifications.
+    A Datadog API key is required.
     """
 
-    def __init__(self, title: str, body: str, datadog_api_key: str) -> None:
-        super().__init__(title, body)
+    def __init__(self, datadog_api_key: str) -> None:
         self.datadog_api_key = datadog_api_key
 
-        # Notification fields
-        self.tags: Dict[str, str] = {}
-        self.alert_type: str = ""
-
-    def set_tags(self, tags: Dict[str, str]) -> Self:
+    def send(
+        self,
+        title: str,
+        body: str,
+        tags: Dict[str, str] = {},
+        alert_type: str = "",
+    ) -> None:
         """
-        (Optional) List of tags to add to datadog event issue
-        Used to identify and update datadog issues if one already
-        exists with the given title and tags.
-        Defaults to {}.
-
-        Args:
-            tags (Dict[str, str]): Event tags
-        """
-        self.tags = tags
-        return self
-
-    def set_alert_type(self, alert_type: str) -> Self:
-        """
-        (Optional) Alert type for datadog event, see
-        https://docs.datadoghq.com/api/latest/events/ for details.
-        Defaults to None.
+        Sends the event to Datadog with the specified fields.
 
         Args:
-            alert_type (str): Alert Type
+            title (str): Title of the event
+            body (str): Main body of the event
+            tags (Dict[str, str], Optional): List of tags to add to event.
+                Defaults to {}.
+            alert_type (str, Optional): Alert type for Datadog event
+                Defaults to "".
         """
-        self.alert_type = alert_type
-        return self
-
-    def send(self) -> None:
-        """
-        Sends the notification
-        """
-        if self.datadog_api_key is not None and self.title and self.body:
+        if self.datadog_api_key is not None:
             send_event(
-                title=self.title,
-                text=self.body,
-                tags=self.tags,
+                title=title,
+                text=body,
+                tags=tags,
                 datadog_api_key=self.datadog_api_key,
-                alert_type=self.alert_type,
+                alert_type=alert_type,
             )
