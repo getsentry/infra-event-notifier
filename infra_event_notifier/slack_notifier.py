@@ -31,11 +31,3 @@ class SlackNotifier:
             eng_pipes_key=self.eng_pipes_key,
             eng_pipes_url=self.eng_pipes_url,
         )
-
-
-# Remove before committing
-if __name__ == "__main__":
-    notif = SlackNotifier(
-        "", "http://localhost:3000/metrics/infra-event-notifier/webhook"
-    )
-    notif.send("Test Title", "Test Body__", "C07EKV0T2E6")

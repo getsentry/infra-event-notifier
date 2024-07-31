@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import json
 import urllib.request
 from urllib.error import HTTPError
@@ -27,11 +29,15 @@ def send_notification(
         "body": text,
         "channel": channel_id,
     }
-    json_data = json.dumps(payload)
+    json_data = json.dumps(
+        payload, separators=(",", ":")
+    )  # must not allow whitespace in json string
     data = json_data.encode("utf-8")
     req = urllib.request.Request(eng_pipes_url, data=data)
-    # TODO: Actually do HMAC signing
-    req.add_header("x-hmac-key", eng_pipes_key)  # currently unused
+    signature = hmac.new(
+        bytes(eng_pipes_key, "utf-8"), msg=data, digestmod=hashlib.sha256
+    ).hexdigest()
+    req.add_header("x-infra-event-notifier-signature", signature)
     req.add_header("Content-Type", "application/json; charset=utf-8")
     with urllib.request.urlopen(req) as response:
         status = response.status
