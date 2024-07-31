@@ -1,10 +1,15 @@
 import json
 import urllib.request  # must use urllib.request.urlopen() in order to do tests
 from base64 import b64encode
+from enum import Enum
 from typing import Any, Dict, Mapping
 from urllib.request import Request
 
 MAX_JIRA_DESCRIPTION_LENGTH = 32000
+
+
+class JiraApiException(Exception):
+    pass
 
 
 class JiraConfig:
@@ -27,6 +32,13 @@ class JiraConfig:
         self.api_key = api_key
 
 
+class IssueType(Enum):
+    TASK = "Task"
+    BUG = "Bug"
+    STORY = "Story"
+    EPIC = "Epic"
+
+
 class JiraFields:
     """
     Contains the fields for a Jira Issue
@@ -37,26 +49,21 @@ class JiraFields:
         tags (Dict[str, str], optional): List of tags to add to jira issue
             Used to identify and update jira issues if one already exists
             with the given title and tags. Defaults to {}.
-        issue_type (str): Type of issue. Can be: Task | Story | Bug | Epic
+        issue_type (IssueType): Type of issue.
+            Can be: Task | Story | Bug | Epic
     """
 
     def __init__(
         self,
         title: str,
         text: str,
+        issue_type: IssueType,
         tags: Dict[str, str] = {},
-        issue_type: str = "Task",
     ) -> None:
         self.title = title
         self.text = text
         self.tags = tags
         self.issue_type = issue_type
-
-
-class JiraApiException(Exception):
-    def __init__(self, stderr: str):
-        self.message = stderr
-        super().__init__(self.message)
 
 
 def http_basic_auth(username: str, api_key: str, req: Request) -> Request:
@@ -101,7 +108,11 @@ def create_or_update_issue(
             _add_jira_comment(jira, key, fallback_comment_text)
     else:
         _create_jira_issue(
-            jira, fields.title, fields.text, fields.tags, fields.issue_type
+            jira,
+            fields.title,
+            fields.text,
+            fields.tags,
+            fields.issue_type.value,
         )
 
 
@@ -111,11 +122,10 @@ def _create_jira_issue(
     body: str,
     tags: Mapping[str, str],
     issue_type: str,
-) -> Any | None:
+) -> None:
     """
     Attempts to create a new jira issue.
     """
-    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/issue"
     payload = {
         "fields": {
@@ -127,71 +137,56 @@ def _create_jira_issue(
         }
     }
     json_data = json.dumps(payload)
-    data = json_data.encode("utf-8")
-    req = Request(api_url, data=data, method="POST")
-    req = http_basic_auth(jira.user_email, api_key, req)
-    req.add_header("Content-Type", "application/json")
-
-    with urllib.request.urlopen(req) as response:
-        status = response.status
-        if status == 201:
-            return response
-        else:
-            raise JiraApiException(
-                f"Failed to create issue: {response.status}, {response.text}"
-            )
+    send_request(
+        api_url, json_data, "POST", 201, jira.user_email, jira.api_key
+    )
 
 
-def _update_jira_issue(
-    jira: JiraConfig, issue_key: str, body: str
-) -> Any | None:
+def _update_jira_issue(jira: JiraConfig, issue_key: str, body: str) -> None:
     """
     Attempts to update a jira issue given the issue key.
     """
-    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}"
     payload = {"fields": {"description": body}}
     json_data = json.dumps(payload)
-    data = json_data.encode("utf-8")
-    req = Request(api_url, data=data, method="PUT")
-    req = http_basic_auth(jira.user_email, api_key, req)
-    req.add_header("Content-Type", "application/json")
-
-    with urllib.request.urlopen(req) as response:
-        status = response.status
-
-        if status == 204:
-            return response
-        else:
-            raise JiraApiException(
-                f"Failed to update issue: "
-                f"{response.status_code}, {response.text}"
-            )
+    send_request(api_url, json_data, "PUT", 204, jira.user_email, jira.api_key)
 
 
-def _add_jira_comment(
-    jira: JiraConfig, issue_key: str, comment: str
-) -> Any | None:
+def _add_jira_comment(jira: JiraConfig, issue_key: str, comment: str) -> None:
     """
     Adds a comment to the given jira issue.
     """
-    api_key = jira.api_key
     api_url = f"{jira.url}/rest/api/2/issue/{issue_key}/comment"
     payload = {"body": comment}
     json_data = json.dumps(payload)
-    data = json_data.encode("utf-8")
-    req = Request(api_url, data=data, method="POST")
-    req = http_basic_auth(jira.user_email, api_key, req)
+    send_request(
+        api_url, json_data, "POST", 201, jira.user_email, jira.api_key
+    )
+
+
+def send_request(
+    url: str,
+    payload: str,
+    method: str,
+    expected_status: int,
+    user_email: str,
+    api_key: str,
+) -> None:
+    """
+    Sends an HTTP request using urllib. Raises a JiraApiException
+    if the returned status does not match the expected status.
+    """
+    data = payload.encode("utf-8")
+    req = Request(url, data=data, method=method)
+    req = http_basic_auth(user_email, api_key, req)
     req.add_header("Content-Type", "application/json")
 
     with urllib.request.urlopen(req) as response:
         status = response.status
 
-        if status == 201:
-            return response
-        else:
+        if status != expected_status:
             raise JiraApiException(
-                f"Failed to update issue: "
+                f"Failed to create or update issue: "
                 f"{response.status_code}, {response.text}"
             )
 

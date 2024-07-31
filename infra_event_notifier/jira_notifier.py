@@ -1,6 +1,7 @@
 from typing import Dict
 
 from infra_event_notifier.backends.jira import (
+    IssueType,
     JiraConfig,
     JiraFields,
     create_or_update_issue,
@@ -32,8 +33,8 @@ class JiraNotifier:
         self,
         title: str,
         body: str,
+        issue_type: IssueType,
         tags: Dict[str, str] = {},
-        issue_type: str = "Task",
         fallback_comment_text: str | None = None,
         update_text_body: bool = False,
     ) -> None:
@@ -43,12 +44,12 @@ class JiraNotifier:
         Args:
             title (str): Title of the issue
             body (str): Main body of the issue
+            issue_type (IssueType): Issue type for jira event,
+                can be: Task | Story | Bug | Epic
+                Defaults to Task.
             tags (Dict[str, str], Optional): List of tags to add to jira issue
                 Used to identify and update jira issues if one already
                 exists with the given title and tags. Defaults to {}.
-            issue_type (str, Optional): Issue type for jira event,
-                can be: Task | Story | Bug | Epic
-                Defaults to Task.
             fallback_comment_text (str, Optional): Comment to include
                 on jira issue if issue already exists. Defaults to None.
             update_text_body (bool, Optional): If set, will update the
@@ -57,7 +58,7 @@ class JiraNotifier:
         """
         assert self.jira_config is not None, "Notification missing config"
 
-        fields = JiraFields(title, body, tags, issue_type)
+        fields = JiraFields(title, body, issue_type, tags)
         create_or_update_issue(
             jira=self.jira_config,
             fields=fields,

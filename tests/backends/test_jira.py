@@ -41,7 +41,7 @@ def test_create_issue_success(setup):
         }
         issue_type = "Task"
 
-        response = _create_jira_issue(jiraConf, title, body, tags, issue_type)
+        _create_jira_issue(jiraConf, title, body, tags, issue_type)
         mock_post.assert_called_once()
         expected_data = json.dumps(
             {
@@ -66,7 +66,6 @@ def test_create_issue_success(setup):
             req.headers["Authorization"]
             == f"Basic {base64string.decode('utf-8')}"
         )
-        assert response.status == 201
         assert req.get_method() == "POST"
 
 
@@ -128,10 +127,9 @@ def test_update_ticket_success(setup):
         body = "tokyo drift"
         issue_key = "JIRA-123"
 
-        response = _update_jira_issue(jiraConf, issue_key, body)
+        _update_jira_issue(jiraConf, issue_key, body)
         mock_put.assert_called_once()
 
-        assert response.status == 204
         expected_data = json.dumps({"fields": {"description": body}}).encode(
             "utf-8"
         )
@@ -263,7 +261,6 @@ def test_find_jira_issue_not_found(setup):
         req = mock_post.call_args.args[0]
         assert req._full_url == f"{jiraConf.url}/rest/api/2/search"
         assert req._data == expected_data
-        print(req.headers)
         assert req.headers["Content-type"] == "application/json"
         assert (
             req.headers["Authorization"]
@@ -324,10 +321,9 @@ def test_create_comment_success(setup):
         issue_key = "JIRA-123"
         test_comment = "test comment"
 
-        response = _add_jira_comment(jiraConf, issue_key, test_comment)
+        _add_jira_comment(jiraConf, issue_key, test_comment)
 
         mock_post.assert_called_once()
-        assert response.status == 201
 
         expected_data = json.dumps({"body": test_comment}).encode("utf-8")
         base64string = b64encode(
