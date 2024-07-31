@@ -49,14 +49,3 @@ def send_event(
                 hdrs=response.headers,
                 fp=None,
             )
-
-
-# testing code, remove before merging
-if __name__ == "__main__":
-    send_event(
-        title="test",
-        text="body",
-        tags={},
-        datadog_api_key="fakeapikey",
-        alert_type="",
-    )
