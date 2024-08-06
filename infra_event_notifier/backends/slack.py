@@ -24,7 +24,7 @@ def send_notification(
     """
     # API docs: https://docs.datadoghq.com/api/latest/events/#post-an-event
     payload = {
-        "source": "infra-event-notifier",
+        "source": "kafka-control-plane",
         "title": title,
         "body": text,
         "channel": channel_id,
