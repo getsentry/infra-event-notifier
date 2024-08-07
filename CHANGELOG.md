@@ -1,3 +1,34 @@
+## 0.0.6
+
+### Various fixes & improvements
+
+- remove testing code (#6) by @bmckerry
+- Refactor & address PR comments (#6) by @bmckerry
+- refactor notifier structure (#6) by @bmckerry
+- address PR comments (#6) by @bmckerry
+- more lint (#6) by @bmckerry
+- lint (#6) by @bmckerry
+- lint (#6) by @bmckerry
+- Refactor Notifier class structure (#6) by @bmckerry
+- Fix pytests, update them to support testing headers + payloads (#6) by @bmckerry
+- Port tests to urllib (#6) by @bmckerry
+- Try fixing tests (#6) by @bmckerry
+- Fix Jira API issues, make functions more generic (#6) by @bmckerry
+- Refactor some more (#6) by @bmckerry
+- More refactoring + add function arg comments (#6) by @bmckerry
+- Refactor notifier.py to add more builder functions (#6) by @bmckerry
+- WIP: support creatign & updating jira tickets (#6) by @bmckerry
+- release: 0.0.4 (62ee06c6) by @getsentry-bot
+- Fixes (#5) by @fpacifici
+- Fix mafeile (#5) by @fpacifici
+- Add CI (#5) by @fpacifici
+- Add pre commit hook (#5) by @fpacifici
+- Add pre-commit (#5) by @fpacifici
+- Fix imports (#5) by @fpacifici
+- Add Makefile (#5) by @fpacifici
+
+_Plus 24 more_
+
 ## 0.0.4
 
 ### Various fixes & improvements
