@@ -11,23 +11,19 @@ class SlackNotifier:
         self.eng_pipes_key = eng_pipes_key
         self.eng_pipes_url = eng_pipes_url
 
-    def send(self, title: str, body: str, channel_id: str) -> None:
+    def send(self, title: str, body: str) -> None:
         """
         Sends the message to slack
         """
         assert self.eng_pipes_key is not None, "Missing Eng-Pipes Signing Key"
         assert self.eng_pipes_url is not None, "Missing Eng-Pipes API URL"
-        assert channel_id is not None, "Missing Slack Channel ID"
 
-        if (
-            self.eng_pipes_url == "" or channel_id == ""
-        ):  # For tests, to avoid sending them out
+        if self.eng_pipes_url == "":  # For tests, to avoid sending them out
             return
 
         send_notification(
             title=title,
             text=body,
-            channel_id=channel_id,
             eng_pipes_key=self.eng_pipes_key,
             eng_pipes_url=self.eng_pipes_url,
         )

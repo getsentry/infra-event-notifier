@@ -6,11 +6,7 @@ from urllib.error import HTTPError
 
 
 def send_notification(
-    title: str,
-    text: str,
-    channel_id: str,
-    eng_pipes_key: str,
-    eng_pipes_url: str,
+    title: str, text: str, eng_pipes_key: str, eng_pipes_url: str
 ) -> None:
     """
     Sends an event to Slack via eng-pipes.
@@ -22,13 +18,7 @@ def send_notification(
     :param eng_pipes_key: Secret Key used to HMAC sign request
     :param eng_pipes_url: Full URL for eng-pipes slack webhooks
     """
-    # API docs: https://docs.datadoghq.com/api/latest/events/#post-an-event
-    payload = {
-        "source": "kafka-control-plane",
-        "title": title,
-        "body": text,
-        "channel": channel_id,
-    }
+    payload = {"source": "kafka-control-plane", "title": title, "body": text}
     json_data = json.dumps(
         payload, separators=(",", ":")
     )  # must not allow whitespace in json string
