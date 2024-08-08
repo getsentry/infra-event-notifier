@@ -29,7 +29,9 @@ class TestSlack:
             separators=(",", ":"),
         ).encode("utf-8")
         headers = {
-            "X-infra-event-notifier-signature": "ea943dbec103c09d406eea667bd549c4094a750d94a651297109887d1cb86513",
+            "X-infra-event-notifier-signature": (
+                "ea943dbec103c09d406eea667bd549c4094a750d94a651297109887d1cb86513"  # noqa
+            ),
             "Content-type": "application/json; charset=utf-8",
         }
         send_notification(
