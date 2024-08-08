@@ -18,7 +18,7 @@ def send_notification(
     :param eng_pipes_key: Secret Key used to HMAC sign request
     :param eng_pipes_url: Full URL for eng-pipes slack webhooks
     """
-    payload = {"source": "kafka-control-plane", "title": title, "body": text}
+    payload = {"source": "infra-event-notifier", "title": title, "body": text}
     json_data = json.dumps(
         payload, separators=(",", ":")
     )  # must not allow whitespace in json string
