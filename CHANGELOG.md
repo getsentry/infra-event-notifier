@@ -1,3 +1,34 @@
+## 0.0.7
+
+### Various fixes & improvements
+
+- fix linter (#8) by @brian-lou
+- add tests (#8) by @brian-lou
+- address PR comments (#8) by @brian-lou
+- Rename source (#8) by @brian-lou
+- release: 0.0.6 (a79380d5) by @getsentry-bot
+- Add HMAC for slack (#8) by @brian-lou
+- Merge branch 'main' into bl/add-slack-integration (#8) by @brian-lou
+- remove testing code (#6) by @bmckerry
+- Refactor & address PR comments (#6) by @bmckerry
+- Add minor checks (#8) by @brian-lou
+- Add slack integration with eng-pipes (#8) by @brian-lou
+- refactor notifier structure (#6) by @bmckerry
+- address PR comments (#6) by @bmckerry
+- more lint (#6) by @bmckerry
+- lint (#6) by @bmckerry
+- lint (#6) by @bmckerry
+- Refactor Notifier class structure (#6) by @bmckerry
+- Fix pytests, update them to support testing headers + payloads (#6) by @bmckerry
+- Port tests to urllib (#6) by @bmckerry
+- Try fixing tests (#6) by @bmckerry
+- Fix Jira API issues, make functions more generic (#6) by @bmckerry
+- Refactor some more (#6) by @bmckerry
+- More refactoring + add function arg comments (#6) by @bmckerry
+- Refactor notifier.py to add more builder functions (#6) by @bmckerry
+
+_Plus 33 more_
+
 ## 0.0.6
 
 ### Various fixes & improvements
