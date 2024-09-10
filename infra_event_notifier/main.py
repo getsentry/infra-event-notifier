@@ -110,7 +110,7 @@ def parse_datadog_terragrunt(args: argparse.Namespace) -> None:
     pass
 
 
-def main():
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="infra-event-notifier",
         description="Sends notifications to Datadog. Slack support planned.",
@@ -123,7 +123,11 @@ def main():
     submenu_datadog(subparsers)
     submenu_datadog_terragrunt(subparsers)
 
-    args = parser.parse_args()
+    return parser.parse_args(argv)
+
+
+def main():
+    args = parse_args()
     args.func(args)
 
 
