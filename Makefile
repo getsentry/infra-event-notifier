@@ -21,6 +21,12 @@ update-deps: venv
 		--strip-extras
 
 
+.PHONY: lint
+lint:
+	pip install -r requirements-dev.txt -e .
+	black infra_event_notifier tests
+	flake8 infra_event_notifier tests
+
 
 .PHONY: typecheck
 typecheck:
