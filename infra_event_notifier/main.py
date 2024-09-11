@@ -1,7 +1,14 @@
 import argparse
+import os
+import pprint
+import sys
 from typing import Any, TypeAlias
 
+from infra_event_notifier.backends import datadog
+
 Subparsers: TypeAlias = "argparse._SubParsersAction[argparse.ArgumentParser]"
+
+DEFAULT_EVENT_SOURCE = "infra-event-notifier"
 
 
 def add_dryrun(parser: argparse.ArgumentParser, submenu: bool) -> None:
@@ -48,7 +55,55 @@ def parse_datadog(args: argparse.Namespace) -> None:
     """
     Parse CLI args for datadog subcommand and send the log.
     """
-    pass
+    title = args.title or ""
+    message = args.message or ""
+    arg_tags = args.tag or []
+
+    if args.source is None or args.source == "":
+        print(
+            "WARNING: No source was set, using 'infra-event-notifier'. Please "
+            "consider setting a more descriptive source!",
+            file=sys.stderr,
+        )
+    source = args.source or DEFAULT_EVENT_SOURCE
+
+    dd_api_key = os.getenv("DATADOG_API_KEY") or os.getenv("DD_API_KEY")
+    if dd_api_key is None or dd_api_key == "":
+        raise ValueError(
+            "ERROR: You must provide a Datadog API key. Set "
+            "environment variable DATADOG_API_KEY or DD_API_KEY."
+        )
+
+    tags = {
+        "source": source,
+        "source_tool": source,
+        "source_category": datadog.DEFAULT_EVENT_SOURCE_CATEGORY,
+    }
+    try:
+        custom_tags = dict([tag.split("=") for tag in arg_tags])
+        tags.update(custom_tags)
+    except Exception as e:
+        raise ValueError(
+            "Tag format incorrect use -t tag=value ex:( -t user=$USER ) "
+            f"\nERROR: \n {e}"
+        )
+
+    send_kwargs: dict[str, Any] = {
+        "title": title,
+        "text": message,
+        "tags": tags,
+        "alert_type": "info",
+    }
+
+    if args.dry_run:
+        print("Would admit the following event:")
+        pprint.pp(send_kwargs)
+    else:
+        try:
+            datadog.send_event(datadog_api_key=dd_api_key, **send_kwargs)
+        except Exception as e:
+            print("!! Could not report an event to DataDog:")
+            print(e)
 
 
 def parse_datadog_terragrunt(args: argparse.Namespace) -> None:
