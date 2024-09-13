@@ -6,10 +6,18 @@ from unittest.mock import MagicMock, patch
 
 from infra_event_notifier.cli.datadog import DatadogCommand
 
+FAKE_DD_KEY = "I_AM_A_DATADOG_KEY"
 
-def _mock_getenv(key: str, default=None):
+
+def _mock_getenv_empty(key: str, default=None):
     if key in ("DATADOG_API_KEY", "DD_API_KEY"):
         return None
+    return "DUMMY_VALUE"
+
+
+def _mock_getenv_set(key: str, default=None):
+    if key in ("DATADOG_API_KEY", "DD_API_KEY"):
+        return FAKE_DD_KEY
     return os.getenv(key, default)
 
 
@@ -20,6 +28,18 @@ class TestCLI:
         subparsers = parser.add_subparsers(help="sub-commands", required=True)
         DatadogCommand().submenu(subparsers)
         return parser
+
+    @pytest.fixture
+    def getenv_empty(self) -> MagicMock:
+        return MagicMock(side_effect=_mock_getenv_empty)
+
+    @pytest.fixture
+    def getenv_set(self) -> MagicMock:
+        return MagicMock(side_effect=_mock_getenv_set)
+
+    @pytest.fixture
+    def send_event(self) -> MagicMock:
+        return MagicMock()
 
     def test_parse_title(self, parser: argparse.ArgumentParser):
         examples = [
@@ -75,15 +95,63 @@ class TestCLI:
         assert "syns=acked" in args.tag
         assert "body=ready" in args.tag
 
-    @patch("os.getenv", MagicMock(side_effect=_mock_getenv))
-    def test_missing_datadog_key(self):
+    def test_missing_datadog_key(self, getenv_empty):
         args = Namespace(
             title="This is really important you gotta tell The Dog!!!",
             message=None,
             source=None,
             tag=None,
+            dry_run=None,
         )
         command = DatadogCommand()
 
-        with pytest.raises(ValueError):
-            command.execute(args)
+        with patch("os.getenv", getenv_empty):
+            with pytest.raises(ValueError):
+                command.execute(args)
+
+    def test_dry_run(self, getenv_set: MagicMock, send_event: MagicMock):
+        args = Namespace(
+            title="This is really important you gotta tell The Dog!!!",
+            message=None,
+            source=None,
+            tag=None,
+            dry_run=True,
+        )
+
+        command = DatadogCommand()
+        with patch("os.getenv", getenv_set):
+            with patch(
+                "infra_event_notifier.backends.datadog.send_event", send_event
+            ):
+                command.execute(args)
+
+                getenv_set.assert_called()
+                send_event.assert_not_called()
+
+    def test_send(self, getenv_set: MagicMock, send_event: MagicMock):
+        args = Namespace(
+            title="This is really important you gotta tell The Dog!!!",
+            message=None,
+            source=None,
+            tag=None,
+            dry_run=None,
+        )
+        command = DatadogCommand()
+        with patch("os.getenv", getenv_set):
+            with patch(
+                "infra_event_notifier.backends.datadog.send_event", send_event
+            ):
+                command.execute(args)
+
+                getenv_set.assert_called()
+                send_event.assert_called_once_with(
+                    datadog_api_key=FAKE_DD_KEY,
+                    title="This is really important you gotta tell The Dog!!!",
+                    text="",
+                    tags={
+                        "source": "infra-event-notifier",
+                        "source_tool": "infra-event-notifier",
+                        "source_category": "infra-tools",
+                    },
+                    alert_type="info",
+                )

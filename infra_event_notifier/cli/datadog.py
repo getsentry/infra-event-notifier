@@ -13,7 +13,7 @@ from infra_event_notifier.cli.command import (
     BaseCommand,
     Subparsers,
     add_dryrun,
-    DEFAULT_EVENT_SOURCE
+    DEFAULT_EVENT_SOURCE,
 )
 from infra_event_notifier.backends import datadog
 
@@ -57,7 +57,7 @@ class DatadogCommand(BaseCommand):
 
         if args.source is None or args.source == "":
             print(
-                "WARNING: No source was set, using 'infra-event-notifier'. "
+                f"WARNING: No source was set, using '{DEFAULT_EVENT_SOURCE}'. "
                 "Please consider setting a more descriptive source!",
                 file=sys.stderr,
             )
