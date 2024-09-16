@@ -4,7 +4,6 @@ from typing import Any, TypeAlias
 
 
 Subparsers: TypeAlias = "argparse._SubParsersAction[argparse.ArgumentParser]"
-DEFAULT_EVENT_SOURCE = "infra-event-notifier"
 
 
 def add_dryrun(parser: argparse.ArgumentParser, submenu: bool) -> None:

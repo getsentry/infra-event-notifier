@@ -1,6 +1,5 @@
 import argparse
 import sys
-import os
 import pprint
 from typing import Any
 
@@ -13,9 +12,10 @@ from infra_event_notifier.cli.command import (
     BaseCommand,
     Subparsers,
     add_dryrun,
-    DEFAULT_EVENT_SOURCE,
 )
 from infra_event_notifier.backends import datadog
+
+DEFAULT_EVENT_SOURCE = "infra-event-notifier"
 
 
 class DatadogCommand(BaseCommand):
@@ -63,13 +63,6 @@ class DatadogCommand(BaseCommand):
             )
         source = args.source or DEFAULT_EVENT_SOURCE
 
-        dd_api_key = os.getenv("DATADOG_API_KEY") or os.getenv("DD_API_KEY")
-        if dd_api_key is None or dd_api_key == "":
-            raise ValueError(
-                "ERROR: You must provide a Datadog API key. Set "
-                "environment variable DATADOG_API_KEY or DD_API_KEY."
-            )
-
         tags = {
             "source": source,
             "source_tool": source,
@@ -90,13 +83,14 @@ class DatadogCommand(BaseCommand):
             "tags": tags,
             "alert_type": "info",
         }
+        api_key = datadog.api_key_from_env()
 
         if args.dry_run:
             print("Would admit the following event:")
             pprint.pp(send_kwargs)
         else:
             try:
-                datadog.send_event(datadog_api_key=dd_api_key, **send_kwargs)
+                datadog.send_event(datadog_api_key=api_key, **send_kwargs)
             except Exception as e:
                 print("!! Could not report an event to DataDog:")
                 print(e)

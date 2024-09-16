@@ -95,7 +95,7 @@ class TestCLI:
         assert "syns=acked" in args.tag
         assert "body=ready" in args.tag
 
-    def test_missing_datadog_key(self, getenv_empty):
+    def test_missing_datadog_key(self, getenv_empty: MagicMock):
         args = Namespace(
             title="This is really important you gotta tell The Dog!!!",
             message=None,
