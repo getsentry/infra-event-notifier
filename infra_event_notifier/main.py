@@ -1,6 +1,7 @@
 import argparse
 
 from infra_event_notifier.cli.datadog import DatadogCommand
+from infra_event_notifier.cli.terragrunt import TerragruntCommand
 from infra_event_notifier.cli.command import BaseCommand, add_dryrun
 
 
@@ -17,7 +18,7 @@ def parse_args(
 
     subparsers = parser.add_subparsers(help="sub-commands", required=True)
 
-    for command in [DatadogCommand()]:
+    for command in [DatadogCommand(), TerragruntCommand()]:
         command.submenu(subparsers)
 
     return parser.parse_args(argv)

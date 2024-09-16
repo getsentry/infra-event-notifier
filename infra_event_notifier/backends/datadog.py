@@ -1,3 +1,4 @@
+import os
 import json
 import time
 import urllib.request
@@ -8,6 +9,20 @@ from urllib.error import HTTPError
 # This category is supposed to be shared by other Sentry tools (terraform,
 # salt, etc.) that report event to DataDog.
 DEFAULT_EVENT_SOURCE_CATEGORY = "infra-tools"
+
+
+def api_key_from_env() -> str:
+    dd_api_key = os.getenv("DATADOG_API_KEY") or os.getenv("DD_API_KEY")
+    if dd_api_key is None or dd_api_key == "":
+        raise ValueError(
+            "ERROR: You must provide a Datadog API key. Set "
+            "environment variable DATADOG_API_KEY or DD_API_KEY."
+        )
+    return dd_api_key
+
+
+def markdown_text(text: str) -> str:
+    return f"%%%\n{text}\n%%%"
 
 
 def send_event(
