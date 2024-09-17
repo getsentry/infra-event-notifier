@@ -69,6 +69,18 @@ silo_regions:
 
         return MagicMock(side_effect=mock_getenv_set_key)
 
+    @pytest.fixture
+    def getenv_unset_sentry_kube(self, config_path: pathlib.Path) -> MagicMock:
+        def mock_getenv_set_key(key: str, default=None) -> str | None:
+            print(f"I am mocked: {key}")
+            if key in ("DATADOG_API_KEY", "DD_API_KEY"):
+                return FAKE_DD_KEY
+            if key == "SENTRY_KUBE_CONFIG_FILE":
+                return None
+            return "DUMMY_VALUE"
+
+        return MagicMock(side_effect=mock_getenv_set_key)
+
     def test_parse(self, parser: argparse.ArgumentParser):
         examples = [
             ["terragrunt", "--cli-args", "apply all"],
@@ -109,8 +121,19 @@ silo_regions:
             config = SentryKubeConfig()
             assert config.silo_regions["saas"].sentry_region == "us"
 
-    def test_get_slice(self):
-        pass
+    def test_missing_config_throws(
+        self, getenv_unset_sentry_kube: MagicMock, send_event: MagicMock
+    ):
+        args = Namespace(cli_args="run-all plan", dry_run=None)
+        command = TerragruntCommand()
+        with patch("os.getenv", getenv_unset_sentry_kube):
+            with patch(
+                "infra_event_notifier.backends.datadog.send_event", send_event
+            ):
+                with pytest.raises(ValueError):
+                    command._execute_impl(
+                        args, cwd="terraform/gib-potato", user="bob"
+                    )
 
     def test_send(self, getenv_set_key: MagicMock, send_event: MagicMock):
         args = Namespace(cli_args="run-all plan", dry_run=None)

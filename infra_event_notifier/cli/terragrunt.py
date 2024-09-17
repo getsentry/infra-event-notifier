@@ -18,6 +18,7 @@ else:
     from typing_extensions import override
 
 from yaml import SafeLoader, load
+
 from infra_event_notifier.cli.command import (
     BaseCommand,
     Subparsers,
@@ -38,9 +39,12 @@ class SentryKubeConfig:
     """
 
     def __init__(self) -> None:
-        config_file_name = os.getenv(
-            "SENTRY_KUBE_CONFIG_FILE", "cli_config/configuration.yaml"
-        )
+        config_file_name = os.getenv("SENTRY_KUBE_CONFIG_FILE")
+        if config_file_name is None:
+            raise ValueError(
+                "Can't locate sentry-kube config file. Please set "
+                "SENTRY_KUBE_CONFIG_FILE."
+            )
 
         with open(config_file_name) as file:
             configuration = load(file, Loader=SafeLoader)
@@ -112,7 +116,6 @@ class TerragruntCommand(BaseCommand):
             ]
             region = tgslice.split("/")[-1]
         else:
-            print(repr(cwd))
             raise RuntimeError(
                 "Unable to determine what slice you're running in."
             )
