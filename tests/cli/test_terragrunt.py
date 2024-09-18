@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from infra_event_notifier.cli.terragrunt import (
     TerragruntCommand,
-    SentryKubeConfig,
+    RegionsConfig,
 )
 
 FAKE_DD_KEY = "I_AM_A_DATADOG_KEY"
@@ -26,22 +26,16 @@ class TestCLI:
 
     @pytest.fixture
     def config_path(self, tmp_path: pathlib.Path) -> pathlib.Path:
-        conf_path = tmp_path / "configuration.yaml"
+        conf_path = tmp_path / "regions.json"
         conf_path.write_text(
             """
-silo_regions:
-  saas:
-    bastion:
-      spawner_endpoint: https://localhost:12345
-      site: some_saas
-    k8s:
-      root: k8s
-      cluster_def_root: clusters/us
-      materialized_manifests: materialized_manifests/us
-    sentry_region: us
-    service_monitors: {
-      getsentry: [ 123456789 ]
-    }
+{
+  "terragrunt_to_sentry_region": {
+    "de": "de",
+    "saas": "us",
+    "us": "us"
+  }
+}
                         """
         )
         return conf_path
@@ -51,7 +45,7 @@ silo_regions:
         def mock_getenv_unset_key(key: str, default=None) -> str | None:
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return default
-            if key == "SENTRY_KUBE_CONFIG_FILE":
+            if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
                 return str(config_path)
             return "DUMMY_VALUE"
 
@@ -63,7 +57,7 @@ silo_regions:
             print(f"I am mocked: {key}")
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return FAKE_DD_KEY
-            if key == "SENTRY_KUBE_CONFIG_FILE":
+            if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
                 return str(config_path)
             return "DUMMY_VALUE"
 
@@ -75,7 +69,7 @@ silo_regions:
             print(f"I am mocked: {key}")
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return FAKE_DD_KEY
-            if key == "SENTRY_KUBE_CONFIG_FILE":
+            if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
                 return None
             return "DUMMY_VALUE"
 
@@ -118,8 +112,10 @@ silo_regions:
 
     def test_load_config(self, getenv_set_key):
         with patch("os.getenv", getenv_set_key):
-            config = SentryKubeConfig()
-            assert config.silo_regions["saas"].sentry_region == "us"
+            config = RegionsConfig()
+            assert config.terragrunt_to_sentry_region["saas"] == "us"
+            assert config.terragrunt_to_sentry_region["us"] == "us"
+            assert config.terragrunt_to_sentry_region["de"] == "de"
 
     def test_missing_config_throws(
         self, getenv_unset_sentry_kube: MagicMock, send_event: MagicMock

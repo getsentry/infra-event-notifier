@@ -1,23 +1,16 @@
 import argparse
 import functools
-import sys
+import getpass
+import json
 import os
 import pprint
-import getpass
-from dataclasses import dataclass
-from typing import Mapping, Any
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
+import sys
+from typing import Any
 
 if sys.version_info >= (3, 12):
     from typing import override
 else:
     from typing_extensions import override
-
-from yaml import SafeLoader, load
 
 from infra_event_notifier.cli.command import (
     BaseCommand,
@@ -29,45 +22,29 @@ from infra_event_notifier.backends import datadog
 TERRAGRUNT_EVENT_SOURCE = "terragrunt"
 
 
-class SentryKubeConfig:
+class RegionsConfig:
     """
-    In order to properly log Terragrunt events, we need some config from
-    sentry-kube. But we don't want to install sentry-kube and its 1 million
-    dependencies. This represents a simplified model of that config. For full
-    details, see repo getsentry/sentry-infra-tools path
-    libsentrykube/config.py.
+    In order to properly log Terragrunt events, we need to map the region from
+    the name of the slice to a Sentry region name. We use a config file sotred
+    in ops/ for this.
     """
 
     def __init__(self) -> None:
-        config_file_name = os.getenv("SENTRY_KUBE_CONFIG_FILE")
+        config_file_name = os.getenv("SENTRY_TERRAGRUNT_REGIONS_CONFIG")
         if config_file_name is None:
             raise ValueError(
                 "Can't locate sentry-kube config file. Please set "
-                "SENTRY_KUBE_CONFIG_FILE."
+                "SENTRY_TERRAGRUNT_REGIONS_CONFIG."
             )
 
         with open(config_file_name) as file:
-            configuration = load(file, Loader=SafeLoader)
+            configuration = json.load(file)
             assert (
-                "silo_regions" in configuration
-            ), "silo_regions entry not present in the config"
-            silo_regions = {
-                name: SiloRegion.from_conf(conf)
-                for name, conf in configuration["silo_regions"].items()
-            }
-
-        self.silo_regions: Mapping[str, SiloRegion] = silo_regions
-
-
-@dataclass(frozen=True)
-class SiloRegion:
-    sentry_region: str
-
-    @classmethod
-    def from_conf(cls, silo_regions_conf: Mapping[str, Any]) -> Self:
-        return cls(
-            sentry_region=silo_regions_conf.get("sentry_region", "unknown")
-        )
+                "terragrunt_to_sentry_region" in configuration.keys()
+            ), "terragrunt_to_sentry_region entry not present in the config"
+            self.terragrunt_to_sentry_region: dict[str, str] = configuration[
+                "terragrunt_to_sentry_region"
+            ]
 
 
 class TerragruntCommand(BaseCommand):
@@ -120,7 +97,7 @@ class TerragruntCommand(BaseCommand):
                 "Unable to determine what slice you're running in."
             )
 
-        sentry_region = SentryKubeConfig().silo_regions[region].sentry_region
+        sentry_region = RegionsConfig().terragrunt_to_sentry_region[region]
 
         tags = {
             "source": TERRAGRUNT_EVENT_SOURCE,
