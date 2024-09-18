@@ -117,6 +117,9 @@ class TerragruntCommand(BaseCommand):
                 "Unable to determine what slice you're running in."
             )
 
+        if region == "us":
+            region = "saas"
+
         sentry_region = SentryKubeConfig().silo_regions[region].sentry_region
 
         tags = {
