@@ -54,7 +54,6 @@ class TestCLI:
     @pytest.fixture
     def getenv_set_key(self, config_path: pathlib.Path) -> MagicMock:
         def mock_getenv_set_key(key: str, default=None) -> str | None:
-            print(f"I am mocked: {key}")
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return FAKE_DD_KEY
             if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
@@ -66,7 +65,6 @@ class TestCLI:
     @pytest.fixture
     def getenv_unset_sentry_kube(self, config_path: pathlib.Path) -> MagicMock:
         def mock_getenv_set_key(key: str, default=None) -> str | None:
-            print(f"I am mocked: {key}")
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return FAKE_DD_KEY
             if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
