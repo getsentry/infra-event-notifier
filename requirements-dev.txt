@@ -36,7 +36,5 @@ pyflakes==3.2.0
     # via flake8
 pytest==8.3.3
     # via -r requirements-dev.in
-types-pyyaml==6.0.12.20240808
-    # via -r requirements-dev.in
 typing-extensions==4.12.2
     # via mypy

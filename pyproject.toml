@@ -11,7 +11,7 @@ description = "Package to send notifications to various backends (datadog/slack/
 readme = "README.md"
 requires-python = ">= 3.10"
 # NOTE: See earlier note about not adding additional dependencies.
-dependencies = ["PyYAML"]
+dependencies = [] # Explicitly empty
 
 [project.scripts]
 infra-event-notifier = "infra_event_notifier:main.main"
