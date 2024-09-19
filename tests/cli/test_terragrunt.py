@@ -45,8 +45,6 @@ class TestCLI:
         def mock_getenv_unset_key(key: str, default=None) -> str | None:
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return default
-            if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
-                return str(config_path)
             return "DUMMY_VALUE"
 
         return MagicMock(side_effect=mock_getenv_unset_key)
@@ -56,35 +54,47 @@ class TestCLI:
         def mock_getenv_set_key(key: str, default=None) -> str | None:
             if key in ("DATADOG_API_KEY", "DD_API_KEY"):
                 return FAKE_DD_KEY
-            if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
-                return str(config_path)
             return "DUMMY_VALUE"
 
         return MagicMock(side_effect=mock_getenv_set_key)
 
-    @pytest.fixture
-    def getenv_unset_sentry_kube(self, config_path: pathlib.Path) -> MagicMock:
-        def mock_getenv_set_key(key: str, default=None) -> str | None:
-            if key in ("DATADOG_API_KEY", "DD_API_KEY"):
-                return FAKE_DD_KEY
-            if key == "SENTRY_TERRAGRUNT_REGIONS_CONFIG":
-                return None
-            return "DUMMY_VALUE"
-
-        return MagicMock(side_effect=mock_getenv_set_key)
+    def test_parse_missing(self, parser: argparse.ArgumentParser):
+        examples = [
+            ["terragrunt", "--region-map", "foo"],
+            ["terragrunt", "--cli-args", "bar"],
+        ]
+        for example in examples:
+            with patch("sys.exit", return_value=None) as mock_exit:
+                parser.parse_args(example)
+                mock_exit.assert_called()
 
     def test_parse(self, parser: argparse.ArgumentParser):
         examples = [
-            ["terragrunt", "--cli-args", "apply all"],
-            ["terragrunt", "--cli-args=apply all"],
+            [
+                "terragrunt",
+                "--region-map",
+                "cli_config/regions.json",
+                "--cli-args",
+                "apply all",
+            ],
+            [
+                "terragrunt",
+                "--cli-args=apply all",
+                "--region-map=cli_config/regions.json",
+            ],
         ]
 
         for example in examples:
             args = parser.parse_args(example)
             assert args.cli_args == "apply all"
+            assert args.region_map == "cli_config/regions.json"
 
-    def test_missing_datadog_key(self, getenv_unset_key: MagicMock):
-        args = Namespace(cli_args="destroy-all", dry_run=None)
+    def test_missing_datadog_key(
+        self, getenv_unset_key: MagicMock, config_path: pathlib.Path
+    ):
+        args = Namespace(
+            cli_args="destroy-all", dry_run=None, region_map=config_path
+        )
         command = TerragruntCommand()
 
         with patch("os.getenv", getenv_unset_key):
@@ -93,8 +103,15 @@ class TestCLI:
                     args, cwd="terraform/gib-potato", user="bob"
                 )
 
-    def test_dry_run(self, getenv_set_key: MagicMock, send_event: MagicMock):
-        args = Namespace(cli_args="apply all", dry_run=True)
+    def test_dry_run(
+        self,
+        getenv_set_key: MagicMock,
+        send_event: MagicMock,
+        config_path: pathlib.Path,
+    ):
+        args = Namespace(
+            cli_args="apply all", dry_run=True, region_map=config_path
+        )
 
         command = TerragruntCommand()
         with patch("os.getenv", getenv_set_key):
@@ -108,29 +125,22 @@ class TestCLI:
                 getenv_set_key.assert_called()
                 send_event.assert_not_called()
 
-    def test_load_config(self, getenv_set_key):
+    def test_load_config(self, getenv_set_key, config_path: pathlib.Path):
         with patch("os.getenv", getenv_set_key):
-            config = RegionsConfig()
+            config = RegionsConfig(str(config_path))
             assert config.terragrunt_to_sentry_region["saas"] == "us"
             assert config.terragrunt_to_sentry_region["us"] == "us"
             assert config.terragrunt_to_sentry_region["de"] == "de"
 
-    def test_missing_config_throws(
-        self, getenv_unset_sentry_kube: MagicMock, send_event: MagicMock
+    def test_send(
+        self,
+        getenv_set_key: MagicMock,
+        send_event: MagicMock,
+        config_path: pathlib.Path,
     ):
-        args = Namespace(cli_args="run-all plan", dry_run=None)
-        command = TerragruntCommand()
-        with patch("os.getenv", getenv_unset_sentry_kube):
-            with patch(
-                "infra_event_notifier.backends.datadog.send_event", send_event
-            ):
-                with pytest.raises(ValueError):
-                    command._execute_impl(
-                        args, cwd="terraform/gib-potato", user="bob"
-                    )
-
-    def test_send(self, getenv_set_key: MagicMock, send_event: MagicMock):
-        args = Namespace(cli_args="run-all plan", dry_run=None)
+        args = Namespace(
+            cli_args="run-all plan", dry_run=None, region_map=config_path
+        )
         command = TerragruntCommand()
         with patch("os.getenv", getenv_set_key):
             with patch(
@@ -139,7 +149,6 @@ class TestCLI:
                 command._execute_impl(
                     args, cwd="terraform/gib-potato", user="bob"
                 )
-
                 getenv_set_key.assert_called()
                 send_event.assert_called_once_with(
                     datadog_api_key=FAKE_DD_KEY,

@@ -29,15 +29,8 @@ class RegionsConfig:
     in ops/ for this.
     """
 
-    def __init__(self) -> None:
-        config_file_name = os.getenv("SENTRY_TERRAGRUNT_REGIONS_CONFIG")
-        if config_file_name is None:
-            raise ValueError(
-                "Can't locate sentry-kube config file. Please set "
-                "SENTRY_TERRAGRUNT_REGIONS_CONFIG."
-            )
-
-        with open(config_file_name) as file:
+    def __init__(self, config_file: str) -> None:
+        with open(config_file) as file:
             configuration = json.load(file)
             assert (
                 "terragrunt_to_sentry_region" in configuration.keys()
@@ -65,7 +58,8 @@ class TerragruntCommand(BaseCommand):
     @override
     def submenu(self, subparsers: Subparsers) -> argparse.ArgumentParser:
         parser = super().submenu(subparsers)
-        parser.add_argument("--cli-args", type=str)
+        parser.add_argument("--cli-args", type=str, required=True)
+        parser.add_argument("--region-map", type=str, required=True)
         add_dryrun(parser, True)
 
         return parser
@@ -80,6 +74,7 @@ class TerragruntCommand(BaseCommand):
         self, args: argparse.Namespace, cwd=os.getcwd(), user=getpass.getuser()
     ) -> None:
         cli_args = args.cli_args
+        region_map = args.region_map
 
         # Find our slice under terragrunt/terraform
         if "terraform/" in cwd:
@@ -97,7 +92,9 @@ class TerragruntCommand(BaseCommand):
                 "Unable to determine what slice you're running in."
             )
 
-        sentry_region = RegionsConfig().terragrunt_to_sentry_region[region]
+        sentry_region = RegionsConfig(region_map).terragrunt_to_sentry_region[
+            region
+        ]
 
         tags = {
             "source": TERRAGRUNT_EVENT_SOURCE,
