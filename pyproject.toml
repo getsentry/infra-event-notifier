@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sentry_infra_event_notifier"
-version = "0.0.7"
+version = "0.0.10"
 description = "Package to send notifications to various backends (datadog/slack/jira)"
 readme = "README.md"
 requires-python = ">= 3.10"

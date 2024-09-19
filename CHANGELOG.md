@@ -1,3 +1,34 @@
+## 0.0.10
+
+### Various fixes & improvements
+
+- fix(terragrunt): use CLI arg, not env var (#16) by @keeakita
+- fix(terragrunt): remove debug print statement from test (#16) by @keeakita
+- feat(terragrunt): use standalone json config instead of sentry-kube config (#16) by @keeakita
+- fix: use correct config path in ops repo (#16) by @keeakita
+- feat(cli): implement terragrunt command (#12) by @keeakita
+- feat(cli): more unit tests (#10) by @keeakita
+- feat(cli): refactor logic into classes (#10) by @keeakita
+- feat(cli): add unit tests (#10) by @keeakita
+- feat(cli): implement datadog subcommand (#10) by @keeakita
+- feat(cli): add basic scaffolding (#10) by @keeakita
+- feat: run GHA over all supported python versions (#11) by @keeakita
+- fix: bump python minimum to 3.10 (#11) by @keeakita
+- release: 0.0.7 (f981cdd9) by @getsentry-bot
+- fix linter (#8) by @brian-lou
+- add tests (#8) by @brian-lou
+- address PR comments (#8) by @brian-lou
+- Rename source (#8) by @brian-lou
+- release: 0.0.6 (a79380d5) by @getsentry-bot
+- Add HMAC for slack (#8) by @brian-lou
+- Merge branch 'main' into bl/add-slack-integration (#8) by @brian-lou
+- remove testing code (#6) by @bmckerry
+- Refactor & address PR comments (#6) by @bmckerry
+- Add minor checks (#8) by @brian-lou
+- Add slack integration with eng-pipes (#8) by @brian-lou
+
+_Plus 46 more_
+
 ## 0.0.7
 
 ### Various fixes & improvements
