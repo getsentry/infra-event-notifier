@@ -2,7 +2,6 @@ import argparse
 from abc import ABC, abstractmethod
 from typing import Any, TypeAlias
 
-
 Subparsers: TypeAlias = "argparse._SubParsersAction[argparse.ArgumentParser]"
 
 

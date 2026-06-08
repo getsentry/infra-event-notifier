@@ -27,8 +27,7 @@ class TestCLI:
     @pytest.fixture
     def config_path(self, tmp_path: pathlib.Path) -> pathlib.Path:
         conf_path = tmp_path / "regions.json"
-        conf_path.write_text(
-            """
+        conf_path.write_text("""
 {
   "terragrunt_to_sentry_region": {
     "de": "de",
@@ -36,8 +35,7 @@ class TestCLI:
     "us": "us"
   }
 }
-                        """
-        )
+                        """)
         return conf_path
 
     @pytest.fixture
