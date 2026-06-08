@@ -5,7 +5,6 @@ import urllib.request
 from typing import Mapping
 from urllib.error import HTTPError
 
-
 # This category is supposed to be shared by other Sentry tools (terraform,
 # salt, etc.) that report event to DataDog.
 DEFAULT_EVENT_SOURCE_CATEGORY = "infra-tools"
