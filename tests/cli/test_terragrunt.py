@@ -130,6 +130,39 @@ class TestCLI:
             assert config.terragrunt_to_sentry_region["us"] == "us"
             assert config.terragrunt_to_sentry_region["de"] == "de"
 
+    def test_send_unmapped_slice(
+        self,
+        getenv_set_key: MagicMock,
+        send_event: MagicMock,
+        config_path: pathlib.Path,
+        capsys: pytest.CaptureFixture[str],
+    ):
+        """
+        A global slice such as terragrunt/regions/all/dd-downtimes ends in a
+        service name, not a region, so it is absent from the region map. That
+        must not fail the terragrunt run -- the event is still sent, with
+        sentry_region reported as unknown.
+        """
+        args = Namespace(
+            cli_args="run-all apply", dry_run=None, region_map=config_path
+        )
+        command = TerragruntCommand()
+        with patch("os.getenv", getenv_set_key):
+            with patch(
+                "infra_event_notifier.backends.datadog.send_event", send_event
+            ):
+                command._execute_impl(
+                    args, cwd="terragrunt/regions/all/dd-downtimes", user="bob"
+                )
+
+        send_event.assert_called_once()
+        tags = send_event.call_args.kwargs["tags"]
+        assert tags["sentry_region"] == "unknown"
+        assert tags["terragrunt_slice"] == "regions/all/dd-downtimes"
+        assert tags["terragrunt_root"] == "terragrunt"
+        # The operator should still be told the region could not be resolved.
+        assert "dd-downtimes" in capsys.readouterr().err
+
     def test_send(
         self,
         getenv_set_key: MagicMock,
