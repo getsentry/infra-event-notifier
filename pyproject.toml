@@ -28,3 +28,6 @@ skip-magic-trailing-comma = true
 [tool.isort]
 profile = "black"
 line_length = 79
+
+[tool.setuptools.package-data]
+sentry_infra_event_notifier = ["py.typed"]
