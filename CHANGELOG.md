@@ -39,41 +39,6 @@
 - hello: add Datadog events and packaging files by @bmckerry in [#1](https://github.com/getsentry/infra-event-notifier/pull/1)
 - Update README.md by @bmckerry in [c27be267](https://github.com/getsentry/infra-event-notifier/commit/c27be267950e38c7fe4da58cd1959cc40eb16981)
 
-## 0.0.11
-
-### New Features ✨
-
-- (cli) Add terragrunt command by @keeakita in [#12](https://github.com/getsentry/infra-event-notifier/pull/12)
-- Add CLI by @keeakita in [#10](https://github.com/getsentry/infra-event-notifier/pull/10)
-
-### Bug Fixes 🐛
-
-- (terragrunt) Tolerate slices with no mapped Sentry region by @mwarkentin in [#25](https://github.com/getsentry/infra-event-notifier/pull/25)
-- Use correct config file for terragrunt by @keeakita in [#16](https://github.com/getsentry/infra-event-notifier/pull/16)
-
-### Other
-
-- Bump black pre-commit hook from 23.10.1 to 26.3.1 by @strongs in [#24](https://github.com/getsentry/infra-event-notifier/pull/24)
-- Bump black from 24.8.0 to 26.3.1 by @dependabot in [#21](https://github.com/getsentry/infra-event-notifier/pull/21)
-- release: 0.0.10 by @getsentry-bot in [2ba1adcd](https://github.com/getsentry/infra-event-notifier/commit/2ba1adcd5c6dedd500b763e371409455b03dce42)
-- Bumpy min python version to 3.10 by @keeakita in [#11](https://github.com/getsentry/infra-event-notifier/pull/11)
-- release: 0.0.7 by @getsentry-bot in [f981cdd9](https://github.com/getsentry/infra-event-notifier/commit/f981cdd955e2bd98baacb2be5110ed3e82309c98)
-- Add Slack Messaging (using eng-pipes) by @brian-lou in [#8](https://github.com/getsentry/infra-event-notifier/pull/8)
-- release: 0.0.6 by @getsentry-bot in [a79380d5](https://github.com/getsentry/infra-event-notifier/commit/a79380d5c777ef9c6ec64157d4fd58b80b60218f)
-- WIP: support creating & updating jira tickets by @bmckerry in [#6](https://github.com/getsentry/infra-event-notifier/pull/6)
-- release: 0.0.4 by @getsentry-bot in [62ee06c6](https://github.com/getsentry/infra-event-notifier/commit/62ee06c6e1936f77545de82ad94a703419c3ca88)
-- Add Makefile, pre-commit, ci and typecheck by @fpacifici in [#5](https://github.com/getsentry/infra-event-notifier/pull/5)
-- release: 0.0.3 by @getsentry-bot in [cf07b191](https://github.com/getsentry/infra-event-notifier/commit/cf07b1915a7596e2a75a56a9f003d9f9a6ecbbb0)
-- requires-python 3.8 by @bmckerry in [c82c02ab](https://github.com/getsentry/infra-event-notifier/commit/c82c02ab068d61b2bd5121be18ff82fd171101a5)
-- release: 0.0.2 by @getsentry-bot in [3d665f84](https://github.com/getsentry/infra-event-notifier/commit/3d665f84a2482188799614c73728008e63450d00)
-- add sentry to pyproject by @bmckerry in [#4](https://github.com/getsentry/infra-event-notifier/pull/4)
-- release: 0.0.1 by @getsentry-bot in [787b9abf](https://github.com/getsentry/infra-event-notifier/commit/787b9abf3bdf1efd911cd1f57e122ce2f4085501)
-- fix craft.yml by @bmckerry in [2734e60c](https://github.com/getsentry/infra-event-notifier/commit/2734e60cc00e7ffe583e3443464143dd8ebdc1e8)
-- fix bump_version.sh by @bmckerry in [252ea591](https://github.com/getsentry/infra-event-notifier/commit/252ea591f30463b6fcc91be139098e55ee541384)
-- changelog by @bmckerry in [031e7719](https://github.com/getsentry/infra-event-notifier/commit/031e7719542e358410574d14a982a4d87aa1fb0d)
-- hello: add Datadog events and packaging files by @bmckerry in [#1](https://github.com/getsentry/infra-event-notifier/pull/1)
-- Update README.md by @bmckerry in [c27be267](https://github.com/getsentry/infra-event-notifier/commit/c27be267950e38c7fe4da58cd1959cc40eb16981)
-
 ## 0.0.10
 
 ### Various fixes & improvements
