@@ -6,6 +6,11 @@ changelogPolicy: auto
 preReleaseCommand: bash ./scripts/bump-version.sh
 releaseBranchPrefix: release
 targets:
+  # Creates the git tag and the GitHub release, with notes read from
+  # CHANGELOG.md. Listed first so a GitHub API failure aborts before anything is
+  # published to an index, which is easier to recover from than a published
+  # package with no tag.
+  - name: github
   - name: pypi
   - name: sentry-pypi
     internalPypiRepo: getsentry/pypi
