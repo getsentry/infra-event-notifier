@@ -21,6 +21,11 @@ from infra_event_notifier.backends import datadog
 
 TERRAGRUNT_EVENT_SOURCE = "terragrunt"
 
+# Reported as sentry_region for slices that do not belong to a single Sentry
+# region, e.g. terragrunt/regions/all/dd-downtimes, whose trailing path
+# component is a service name rather than a region.
+UNKNOWN_SENTRY_REGION = "unknown"
+
 
 class RegionsConfig:
     """
@@ -92,9 +97,22 @@ class TerragruntCommand(BaseCommand):
                 "Unable to determine what slice you're running in."
             )
 
-        sentry_region = RegionsConfig(region_map).terragrunt_to_sentry_region[
-            region
-        ]
+        # Not every slice lives in a Sentry region. Slices under
+        # terragrunt/regions/all are global, so the trailing path component
+        # is a service name that never appears in the region map. Reporting
+        # the event is best-effort -- send_event() below already swallows its
+        # own failures -- so an unmapped slice must not fail the terragrunt
+        # run that invoked this hook.
+        regions = RegionsConfig(region_map)
+        sentry_region = regions.terragrunt_to_sentry_region.get(region)
+        if sentry_region is None:
+            print(
+                f"!! No Sentry region mapped for '{region}' "
+                f"(slice '{tgslice}'), reporting it as "
+                f"'{UNKNOWN_SENTRY_REGION}'.",
+                file=sys.stderr,
+            )
+            sentry_region = UNKNOWN_SENTRY_REGION
 
         tags = {
             "source": TERRAGRUNT_EVENT_SOURCE,
