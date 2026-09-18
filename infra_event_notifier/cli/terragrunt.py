@@ -30,7 +30,7 @@ UNKNOWN_SENTRY_REGION = "unknown"
 class RegionsConfig:
     """
     In order to properly log Terragrunt events, we need to map the region from
-    the name of the slice to a Sentry region name. We use a config file sotred
+    the name of the slice to a Sentry region name. We use a config file stored
     in ops/ for this.
     """
 

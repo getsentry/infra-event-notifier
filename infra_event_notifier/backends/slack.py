@@ -35,7 +35,7 @@ def send_notification(
             raise HTTPError(
                 url=response.url,
                 code=status,
-                msg=f"Recieved {status} response from Datadog",
+                msg=f"Received {status} response from Slack",
                 hdrs=response.headers,
                 fp=None,
             )
