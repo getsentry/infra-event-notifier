@@ -64,7 +64,7 @@ def send_event(
             raise HTTPError(
                 url=response.url,
                 code=status,
-                msg=f"Recieved {status} response from Datadog",
+                msg=f"Received {status} response from Datadog",
                 hdrs=response.headers,
                 fp=None,
             )

@@ -9,7 +9,7 @@ def add_dryrun(parser: argparse.ArgumentParser, submenu: bool) -> None:
     """
     Helper function to register a dry-run flag.
 
-    We need this on submenus as well as the main parser becaausethe user can
+    We need this on submenus as well as the main parser because the user can
     give the flag before or after the subcommand.
     """
     add_arg_kwargs: dict[str, Any] = {}
