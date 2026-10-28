@@ -6,10 +6,12 @@
 #
 ast-serialize==0.6.0
     # via mypy
-black==26.5.1
+black==26.10.1
     # via -r requirements-dev.in
 click==8.4.2
     # via black
+exceptiongroup==1.3.1
+    # via pytest
 flake8==7.3.0
     # via -r requirements-dev.in
 iniconfig==2.3.0
@@ -46,5 +48,13 @@ pytest==9.1.1
     # via -r requirements-dev.in
 pytokens==0.4.1
     # via black
+tomli==2.5.0
+    # via
+    #   black
+    #   mypy
+    #   pytest
 typing-extensions==4.16.0
-    # via mypy
+    # via
+    #   black
+    #   exceptiongroup
+    #   mypy
