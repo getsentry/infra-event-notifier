@@ -1,8 +1,11 @@
-minVersion: 0.0.1
+minVersion: 3.9.0
 github:
   owner: getsentry
   repo: infra-event-notifier
-changelogPolicy: auto
+changelog:
+  policy: auto
+versioning:
+  policy: manual
 preReleaseCommand: bash ./scripts/bump-version.sh
 releaseBranchPrefix: release
 targets:
